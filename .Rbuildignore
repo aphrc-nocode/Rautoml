@@ -1,0 +1,15 @@
+^LICENSE\.md$
+makestuff/*
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+^\.travis\.yml$
+.*\.md
+Makefile
+^\.pdf
+.*\.tar.gz
+README*\.*
+commit\.time
+.*\.mk
+.*\.time
+.*\.log
