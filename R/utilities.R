@@ -122,7 +122,7 @@ get_data_class = function(path) {
 #'
 #' Uploads csv data
 #'
-#' @inheritParams path
+#' @param path
 #'
 #' @return a dataframe.
 #'
@@ -141,7 +141,7 @@ upload_data.csv = function(path) {
 #'
 #' Uploads excel data
 #'
-#' @inheritParams path
+#' @param path
 #'
 #' @return a dataframe.
 #'
@@ -161,7 +161,7 @@ upload_data.xlsx = function(path) {
 #'
 #' Uploads excel data
 #'
-#' @inheritParams path
+#' @param path
 #'
 #' @return a dataframe.
 #'
@@ -181,7 +181,7 @@ upload_data.xls = function(path) {
 #'
 #' Uploads Stata data
 #'
-#' @inheritParams path
+#' @param path
 #'
 #' @return a dataframe.
 #'
@@ -200,7 +200,7 @@ upload_data.dta = function(path) {
 #'
 #' Uploads rda data. The rda file should be a dataframe.
 #'
-#' @inheritParams path
+#' @param path
 #'
 #' @return a dataframe.
 #'
@@ -217,7 +217,7 @@ upload_data.rda = function(path) {
 #'
 #' Uploads rds data. The rda file should be a dataframe.
 #'
-#' @inheritParams path
+#' @param path
 #'
 #' @return a dataframe.
 #'
@@ -235,7 +235,7 @@ upload_data.rds = function(path) {
 #'
 #' Uploads .sav or .por data.
 #'
-#' @inheritParams path
+#' @param path
 #'
 #' @return a dataframe.
 #'
@@ -257,7 +257,7 @@ upload_data.spss = function(path) {
 #'
 #' @param df data frame
 #'
-#' @inheritParams path
+#' @param path
 #'
 #' @return NULL.
 #'
@@ -278,7 +278,7 @@ write_data.csv = function(path, df) {
 #'
 #' @param df data frame
 #'
-#' @inheritParams path
+#' @param path
 #'
 #' @return NULL.
 #'
@@ -299,7 +299,7 @@ write_data.xlsx = function(path, df) {
 #'
 #' @param df dataframe
 #'
-#' @inheritParams path
+#' @param path
 #'
 #' @return NULL.
 #'
@@ -318,7 +318,7 @@ write_data.dta = function(path, df) {
 #' Writes rda data. The rda file should be a dataframe.
 #'
 #' @param df data frame.
-#' @inheritParams path
+#' @param path
 #'
 #' @return NULL.
 #'
@@ -335,7 +335,7 @@ write_data.rda = function(path, df) {
 #' Writes rds dataframe.
 #'
 #' @param df data frame.
-#' @inheritParams path
+#' @param path
 #'
 #' @return NULL.
 #'
@@ -353,7 +353,7 @@ write_data.rds = function(path, df) {
 #' Writes .sav or .por data.
 #'
 #' @param df data frame.
-#' @inheritParams path
+#' @param path
 #'
 #' @return NULL.
 #'

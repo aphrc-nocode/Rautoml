@@ -25,7 +25,7 @@ write_data(path, df)
 \method{write_data}{spss}(path, df)
 }
 \arguments{
-\item{path}{data path or url.}
+\item{path}{}
 
 \item{df}{data frame.}
 }
@@ -59,4 +59,3 @@ Writes rds dataframe.
 
 Writes .sav or .por data.
 }
-\keyword{internal}

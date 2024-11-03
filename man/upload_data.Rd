@@ -28,7 +28,7 @@ upload_data(path)
 \method{upload_data}{spss}(path)
 }
 \arguments{
-\item{path}{data path or url.}
+\item{path}{}
 }
 \value{
 a dataframe.
@@ -64,4 +64,3 @@ Uploads rds data. The rda file should be a dataframe.
 
 Uploads .sav or .por data.
 }
-\keyword{internal}
