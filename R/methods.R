@@ -6,7 +6,7 @@
 #'
 #' @return a dataframe.
 #'
-#' @keywords internal
+#' @export
 
 upload_data = function(path)UseMethod("upload_data")
 
@@ -19,7 +19,7 @@ upload_data = function(path)UseMethod("upload_data")
 #'
 #' @return NULL.
 #'
-#' @keywords internal
+#' @export
 
 write_data = function(path, df)UseMethod("write_data")
 
