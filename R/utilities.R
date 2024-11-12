@@ -453,6 +453,8 @@ na_codes <- function(x, ...) {
 #' @param x input vector.
 #'
 #' @return a vector of class numeric.
+#'
+#' @export
 
 factor_numeric <- function(x) {
 	sjlabelled::as_numeric(x)
@@ -463,6 +465,8 @@ factor_numeric <- function(x) {
 #' @param x input vector.
 #'
 #' @return a vector of class factor.
+#'
+#' @export
 
 numeric_factor <- function(x) {
 	if (isTRUE(!is.null(attr(x, "labels")))) {
@@ -478,6 +482,8 @@ numeric_factor <- function(x) {
 #' @param x input vector.
 #'
 #' @return a vector of class character.
+#'
+#' @export
 
 numeric_character <- function(x) {
 	if (isTRUE(!is.null(attr(x, "labels")))) {
@@ -614,6 +620,7 @@ relabel_missing_values = function(x, new_value) {
 #'
 #' @return vector of min and max.
 #'
+#' @export
 
 get_range = function(df, var) {
 	x = (df
@@ -633,6 +640,8 @@ get_range = function(df, var) {
 #' @details if regex not specified, every text is replaced with pattern. Same as `stringr::str_replace_all`.
 #'
 #' @return a dataframe.
+#'
+#' @export
 #'
 
 na_if_pattern = function(df, var, pattern, replacement = NA_character_, apply_all=FALSE) {
@@ -663,6 +672,18 @@ na_if_pattern = function(df, var, pattern, replacement = NA_character_, apply_al
 	return(df)
 }
 
+#' Convert patterns to NA for single variable
+#'
+#' Create NAs based on particular patterns.
+#'
+#' @param df input dataframe.
+#' @param var input variable.
+#'
+#' @return a dataframe.
+#'
+#' @export
+#'
+
 na_if_category_single = function(df, var, labels, range=FALSE) {
 	.ff = function(x, labels, range) {
 		if (get_type(x) == "numeric") {
@@ -688,6 +709,17 @@ na_if_category_single = function(df, var, labels, range=FALSE) {
 	)
 	return(df)
 }
+
+#' Convert patterns to NA for multiple variables
+#'
+#' Create NAs based on particular patterns.
+#'
+#' @param df input dataframe.
+#'
+#' @return a dataframe.
+#'
+#' @export
+#'
 
 na_if_category_multiple = function(df, numeric_labels, categorical_labels, range=FALSE) {
 	.ff = function(x, labels, range) {
@@ -727,6 +759,7 @@ na_if_category_multiple = function(df, numeric_labels, categorical_labels, range
 #'
 #' @return a dataframe.
 #'
+#' @export
 
 na_if_label = function(df, var, labels, apply_all=FALSE) {
 	if (apply_all) {
@@ -752,6 +785,7 @@ na_if_label = function(df, var, labels, apply_all=FALSE) {
 #'
 #' @return a dataframe.
 #'
+#' @export
 
 na_if_numeric = function(df, var, range, apply_all=FALSE) {
 	.ff = function(x, range) {
@@ -778,6 +812,7 @@ na_if_numeric = function(df, var, range, apply_all=FALSE) {
 #'
 #' @return a vector.
 #'
+#' @export
 
 na_to_values = function(df, var, na_pattern, new_category, apply_all=FALSE) {
 	
@@ -825,6 +860,7 @@ na_to_values = function(df, var, na_pattern, new_category, apply_all=FALSE) {
 #'
 #' @return a vector of outlier values.
 #'
+#' @export
 
 get_outliers = function(df, var) {
 	x = (df
@@ -839,6 +875,10 @@ get_outliers = function(df, var) {
 	}
 	return(x)
 }
+
+#' Handle outliers
+#'
+#' @export
 
 handle_outliers = function(df, var, outliers, action, new_values=NULL, fun=NULL) {
 
