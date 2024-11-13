@@ -70,7 +70,7 @@ create_df_metadata = function(data, filename, study_name, study_country, additio
 	file_metadata$study_country = paste0(study_country, collapse=", ")
 	file_metadata$additional_info = additional_info
 	file_metadata$file_name = filename
-	file_metadata$size = object.size(data)
+	file_metadata$size = c(object.size(data))
 	file_metadata$observations = NROW(data)
 	file_metadata$features = NCOL(data)
 	file_metadata$upload_time = upload_time
