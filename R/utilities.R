@@ -814,13 +814,17 @@ na_if_numeric = function(df, var, range, apply_all=FALSE) {
 #'
 #' @export
 
-na_to_values = function(df, var, na_pattern, new_category, apply_all=FALSE) {
+na_to_values = function(df, var, na_pattern, new_category, new_numeric=NULL, apply_all=FALSE) {
 	
-	.ff = function(x, na_pattern, new_category){
+	.ff = function(x, na_pattern, new_category, new_numeric){
 		if (get_type(x) != "numeric") {
 			x = sjlabelled::as_character(x)
 		} else {
-			new_category = as.numeric(new_category)
+			if (!is.null(new_numeric)) {
+				new_category = as.numeric(new_numeric)
+			} else {
+				new_category = as.numeric(new_category)
+			}
 		}
 		if (any(na_pattern %in% c("", "Blank")) & any(grep("^$", x))) {
 			x[x==""] = new_category
@@ -838,11 +842,11 @@ na_to_values = function(df, var, na_pattern, new_category, apply_all=FALSE) {
 
 	if (apply_all) {
 		df = (df
-			|> dplyr::mutate_all(.ff, na_pattern, new_category)
+			|> dplyr::mutate_all(.ff, na_pattern, new_category, new_numeric)
 		)
 	} else {
 		df = (df
-			|> dplyr::mutate_at(var, .ff, na_pattern, new_category)
+			|> dplyr::mutate_at(var, .ff, na_pattern, new_category, new_numeric)
 		)
 	}
 	return(df)
