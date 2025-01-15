@@ -10,11 +10,12 @@
 #' @export
 #'
 
-ggunivariate = function(df, vartype) {
+ggunivariate = function(df, vartype, max_nlevels=30) {
 	var = colnames(df)
 	df = (df
 		|> dplyr::rename_at(var, ~c(".x_var"))
 	)
+	
 	if (any(vartype %in% c("factor", "character"))) {
 		df = (df
 			|> group_by(.x_var)
@@ -24,6 +25,24 @@ ggunivariate = function(df, vartype) {
 			|> arrange(desc(prop))
 			|> mutate(pos = n():1, .gg=GREEN3)
 		)
+		
+		n_levels = length(unique(df |> pull(.x_var)))
+		max_nlevels = n_levels - max_nlevels
+		if (n_levels > max_nlevels) {
+		  df = (df
+				  |> dplyr::mutate(
+					 .x_var = dplyr::if_else(pos <= max_nlevels, "Other categories (lumped)", .x_var)
+				  )
+				  |> ungroup()
+				  |> group_by(.x_var)
+				  |> mutate(
+					 prop = dplyr::if_else(pos <= max_nlevels, sum(prop), prop)
+					 , pos = dplyr::if_else(pos <= max_nlevels, max_nlevels, pos)
+				  )
+				  |> dplyr::distinct(.x_var, .keep_all = TRUE)
+		  )
+		}
+
 		p1 = (ggplot(df, aes(x = reorder(.x_var, pos), y=prop, label = scales::percent(prop), fill=.gg))
 			+ scale_fill_identity()
 			+ geom_col(position="dodge")

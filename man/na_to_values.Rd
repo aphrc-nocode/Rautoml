@@ -4,7 +4,14 @@
 \alias{na_to_values}
 \title{Assign missing values new values/categories}
 \usage{
-na_to_values(df, var, na_pattern, new_category, apply_all = FALSE)
+na_to_values(
+  df,
+  var,
+  na_pattern,
+  new_category,
+  new_numeric = NULL,
+  apply_all = FALSE
+)
 }
 \arguments{
 \item{df}{input dataframe.}
