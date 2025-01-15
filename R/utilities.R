@@ -736,7 +736,7 @@ na_if_category_multiple = function(df, numeric_labels, categorical_labels, range
 				x[x %in% labels] = NA
 			}
 		} else {
-			labels = unlist(strsplit(categorical_labels, "\\,|\\;"))
+			labels = unlist(strsplit(categorical_labels, "\\, |\\; |\\,|\\;"))
 			x[x %in% labels] = NA_character_
 		}
 		return(x)
@@ -921,5 +921,29 @@ filter_missing_values_df = function(df, column, var_column, var) {
 		|> dplyr::rename_at(var_column, ~c("variable"))
 		|> dplyr::filter_at(dplyr::vars(column), dplyr::any_vars(.>0 & variable %in% var))
 	)
+	return(df)
+}
+
+#' Drop NAs
+#'
+#' @details Drops NAs for a specific variable or entire dataset
+#'
+#' @param df data frame
+#' @param variable. Default is NULL. A vector of variable name(s) in the df. If specified, drop NAs for a specific variable otherwise for all the variables in the df
+#'
+#' @importFrom tidyr drop_na
+#'
+#' @export
+
+drop_missing_values = function(df, variable = NULL) {
+	if (is.null(variable)) {
+		df =(df
+			|> tidyr::drop_na()
+		) 
+	} else {
+		df = (df
+			|> tidyr::drop_na(all_of(variable))
+		)
+	}
 	return(df)
 }
