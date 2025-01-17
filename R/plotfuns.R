@@ -129,3 +129,17 @@ base_theme <- function() {
 		, strip.text = element_text(color = GRAY7)) 
 }
 
+#' Visualise missing data
+#' @details The function provides a summary of the missing data
+#'
+#' @param df data frame
+#'
+#' @importFrom naniar gg_miss_var
+#'
+#' @export
+#'
+
+missing_data_plot = function(df, ...) {
+	p1 = gg_miss_var(df, ...) + base_theme()
+	return(p1)
+}

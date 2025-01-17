@@ -4,7 +4,7 @@
 \alias{ggunivariate}
 \title{Univariate plots}
 \usage{
-ggunivariate(df, vartype)
+ggunivariate(df, vartype, max_nlevels = 30)
 }
 \arguments{
 \item{df}{data frame object.}
