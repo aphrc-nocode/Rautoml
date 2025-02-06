@@ -947,3 +947,23 @@ drop_missing_values = function(df, variable = NULL) {
 	}
 	return(df)
 }
+
+#' Combine rows
+#'
+#' @details Combine two datasets by row, i.e., append 
+#'
+#' @param df1 base dataset
+#' @param df2 new dataset
+#' @param id indicator variable
+#'
+#' @importFrom dplyr bind_rows 
+#'
+#' @export
+#'
+
+combine_rows = function(df1, df2, id=NULL) {
+	df = dplyr::bind_rows(df1, df2, .id=id)
+	add_rows = NROW(df2)
+	add_cols = NCOL(df) - NCOL(df1)
+	return(list(df=df, dim=c(add_rows, add_cols)))
+}
