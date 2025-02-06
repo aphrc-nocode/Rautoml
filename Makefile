@@ -51,12 +51,23 @@ vignettes/Rautoml_intro.pdf: vignettes/Rautoml_intro.Rmd
 methods.Rout: R/methods.R
 utilities.Rout: R/utilities.R
 plotfuns.Rout: R/plotfuns.R
+barplot.Rout: R/barplot.R
+histogram.Rout: R/histogram.R
+piechart.Rout: R/piechart.R
+histogram.Rout: R/histogram.R
+tables.Rout: R/tables.R
+boxplot.Rout: R/boxplot.R
+linegraph.Rout: R/linegraph.R
+pivottable_custom.Rout: R/pivottable_custom.R
+scatterplot_custom.Rout: R/scatterplot_custom.R
+violinplot.Rout: R/violinplot.R
 
 ######################################################################
 
 ## install required packages for vignettes 
 
 quickinstall:
+	rm Rautoml_1.0.0.*.gz
 	R CMD build .
 	make install-tarball
 
