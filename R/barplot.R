@@ -21,7 +21,7 @@
 #' @param legend_title Title of the legend (default: "").
 #' @param colorbrewer Color palette from RColorBrewer (default: "Dark2").
 #' 
-#' @return A ggplot2::ggplot bar plot object.
+#' @return A ggplot2 bar plot object.
 #' 
 #' @import ggplot2 dplyr tidyr RColorBrewer
 #' @export
