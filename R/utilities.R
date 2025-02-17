@@ -962,8 +962,49 @@ drop_missing_values = function(df, variable = NULL) {
 #'
 
 combine_rows = function(df1, df2, id=NULL) {
+	if (id=="") {
+		id = NULL
+	}
+	common = intersect(colnames(df1), colnames(df2))
+	if (length(common)>0) {
+		types1 = sapply(df1[, common, drop=FALSE], get_type)	
+		types2 = sapply(df2[, common, drop=FALSE], get_type)	
+		if (!isTRUE(all.equal(types1, types2))) {
+			as.types1 = paste0("as.", types1)
+			names(as.types1) = names(types1)
+			as.types2 = paste0("as.", types2)
+			names(as.types2) = names(types2)
+			df1[, names(as.types1)] = sapply(names(as.types1), function(x) {
+				x = do.call(as.types1[x], list(df1[[x]]))
+				x
+			})
+			df2[, names(as.types1)] = sapply(names(as.types1), function(x) {
+				x = do.call(as.types1[x], list(df2[[x]]))
+				x
+			})
+		}
+	}
 	df = dplyr::bind_rows(df1, df2, .id=id)
 	add_rows = NROW(df2)
 	add_cols = NCOL(df) - NCOL(df1)
 	return(list(df=df, dim=c(add_rows, add_cols)))
+}
+
+#' Rename variables
+#'
+#' Rename variables in a data frame
+#'
+#' @param df dataframe
+#' @param old old variable name
+#' @param new new variable name
+#'
+#' @importFrom dplyr rename_at
+#'
+#' @export
+
+rename_vars = function(df, old, new) {
+	df = (df
+		|> dplyr::rename_at(old, ~c(new))
+	)
+	return(df)
 }

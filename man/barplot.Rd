@@ -66,7 +66,7 @@ barplot(
 \item{colorbrewer}{Color palette from RColorBrewer (default: "Dark2").}
 }
 \value{
-A ggplot2::ggplot bar plot object.
+A ggplot2 bar plot object.
 }
 \description{
 Generates a bar plot with various customization options.
