@@ -969,18 +969,17 @@ combine_rows = function(df1, df2, id=NULL) {
 	if (length(common)>0) {
 		types1 = sapply(df1[, common, drop=FALSE], get_type)	
 		types2 = sapply(df2[, common, drop=FALSE], get_type)	
-		check = all.equal(types1, types2)
-		if (!check) {
-			common = common[!types1 %in% types2]
-			types = common[!types1 %in% types2]
-			types = paste0("as.", types)
-			names(types) = common
-			df1[, names(types)] = sapply(names(types), function(x) {
-				x = do.call(types[x], list(df1[[x]]))
+		if (!isTRUE(all.equal(types1, types2))) {
+			as.types1 = paste0("as.", types1)
+			names(as.types1) = names(types1)
+			as.types2 = paste0("as.", types2)
+			names(as.types2) = names(types2)
+			df1[, names(as.types1)] = sapply(names(as.types1), function(x) {
+				x = do.call(as.types1[x], list(df1[[x]]))
 				x
 			})
-			df2[, names(types)] = sapply(names(types), function(x) {
-				x = do.call(types[x], list(df2[[x]]))
+			df2[, names(as.types1)] = sapply(names(as.types1), function(x) {
+				x = do.call(as.types1[x], list(df2[[x]]))
 				x
 			})
 		}
