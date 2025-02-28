@@ -140,6 +140,9 @@ base_theme <- function() {
 #'
 
 missing_data_plot = function(df, ...) {
-	p1 = gg_miss_var(df, ...) + base_theme()
+	p1 = (gg_miss_var(df, show_pct = TRUE, ...) 
+		+ ylim(0, 100)
+		+ base_theme()
+	)
 	return(p1)
 }

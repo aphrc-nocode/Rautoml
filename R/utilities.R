@@ -948,20 +948,21 @@ drop_missing_values = function(df, variable = NULL) {
 	return(df)
 }
 
-#' Combine rows
+#' Add rows or columns
 #'
-#' @details Combine two datasets by row, i.e., append 
+#' @details Combine two datasets by row, i.e., append  or by columns
 #'
 #' @param df1 base dataset
 #' @param df2 new dataset
 #' @param id indicator variable
+#' @param type either "row" or "column"
 #'
 #' @importFrom dplyr bind_rows 
 #'
 #' @export
 #'
 
-combine_rows = function(df1, df2, id=NULL) {
+combine_data = function(df1, df2, type, id=NULL) {
 	if (id=="") {
 		id = NULL
 	}
@@ -984,11 +985,24 @@ combine_rows = function(df1, df2, id=NULL) {
 			})
 		}
 	}
-	df = dplyr::bind_rows(df1, df2, .id=id)
+	if (type=="row") {
+		df = dplyr::bind_rows(df1, df2, .id=id)
+	} else {
+		df = dplyr::left_join(df1, df2, by = common, suffix = c(".data1", ".data2"))	
+	}
 	add_rows = NROW(df2)
 	add_cols = NCOL(df) - NCOL(df1)
 	return(list(df=df, dim=c(add_rows, add_cols)))
 }
+
+
+combine_columns = function(df1, df2, by = NULL) {
+	df = dplyr::left_join(df1, df2, by = by, suffix = c(".data1", ".data2"))	
+	add_rows = NROW(df2)
+	add_cols = NCOL(df) - NCOL(df1)
+	return(list(df=df, dim=c(add_rows, add_cols)))
+}
+
 
 #' Rename variables
 #'
