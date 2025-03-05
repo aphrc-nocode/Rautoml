@@ -25,7 +25,8 @@
 #' 
 #' @import ggplot2 dplyr tidyr RColorBrewer
 #' @export
-barplot <- function(df, xvar, yvar = NULL, vertical = TRUE, stackedtype = TRUE, colorVar = NULL, bar_width = 0.9,default_col = "blue",
+
+custom_barplot <- function(df, xvar, yvar = NULL, vertical = TRUE, stackedtype = TRUE, colorVar = NULL, bar_width = 0.9,default_col = "blue",
                     plot_title = NULL, xlab = NULL, ylab = "Percentage", title_pos = 0.5, title_size = 25,
                     axis_title_size = 20, axis_text_size = 16, data_label_size = 10, axistext_angle = 0, legend_title = "", colorbrewer = "Dark2") {
   
