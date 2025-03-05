@@ -1,5 +1,10 @@
+#' Generate a Boxplot
+#'
 
-library(ggplot2)
+#' @import ggplot2 dplyr
+#' @importFrom RColorBrewer brewer.pal
+#' @export
+
 boxplot_custom <- function(df, xvar = NULL, yvar, colorVar = NULL,plot_title = NULL, vertical = TRUE, xlab = NULL, ylab = NULL, title_pos = 0.5, title_size = 25, default_col = "#0077B6",
                            axis_title_size = 20, axis_text_size = 16, axistext_angle = 0, legend_title = "", colorbrewer = "Dark2") {
   
