@@ -51,16 +51,15 @@ vignettes/Rautoml_intro.pdf: vignettes/Rautoml_intro.Rmd
 methods.Rout: R/methods.R
 utilities.Rout: R/utilities.R
 plotfuns.Rout: R/plotfuns.R
-barplot.Rout: R/barplot.R
-histogram.Rout: R/histogram.R
-piechart.Rout: R/piechart.R
-histogram.Rout: R/histogram.R
-tables.Rout: R/tables.R
-boxplot.Rout: R/boxplot.R
-linegraph.Rout: R/linegraph.R
+custom_barplot.Rout: R/custom_barplot.R
+custom_piechart.Rout: R/custom_piechart.R
+custom_histogram.Rout: R/custom_histogram.R
+custom_boxplot.Rout: R/custom_boxplot.R
+custom_linegraph.Rout: R/custom_linegraph.R
 pivottable_custom.Rout: R/pivottable_custom.R
-scatterplot_custom.Rout: R/scatterplot_custom.R
-violinplot.Rout: R/violinplot.R
+custom_crosstab.Rout: R/custom_crosstab.R
+custom_scatterplot.Rout: R/scatterplot_custom.R
+custom_violin.Rout: R/custom_violin.R
 
 ######################################################################
 

@@ -13,3 +13,5 @@ commit\.time
 .*\.mk
 .*\.time
 .*\.log
+^.*\.Rproj$
+^\.Rproj\.user$

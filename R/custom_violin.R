@@ -21,7 +21,7 @@
 #' @import ggplot2 RColorBrewer
 #' @export
 
-violin_custom <- function(df, xvar, yvar, colorVar = NULL, plot_title = NULL, vertical = TRUE, 
+custom_violin <- function(df, xvar, yvar, colorVar = NULL, plot_title = NULL, vertical = TRUE, 
                           xlab = NULL, ylab = NULL, title_pos = 0.5, title_size = 25, default_col = "#0077B6",
                           axis_title_size = 20, axis_text_size = 16, axistext_angle = 0, legend_title = "", 
                           colorbrewer = "Dark2") {
@@ -86,7 +86,3 @@ violin_custom <- function(df, xvar, yvar, colorVar = NULL, plot_title = NULL, ve
   
   return(p)
 }
-
-
-#violin_custom(df = mtcars, xvar = "cyl",vertical = TRUE, yvar = NULL)
-#violin_custom(df = mtcars, yvar = "mpg", colorVar = "gear", xvar = "carb", vertical = TRUE )

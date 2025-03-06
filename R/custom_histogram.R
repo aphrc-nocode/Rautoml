@@ -19,7 +19,7 @@
 #' @return A ggplot2 object representing the histogram.
 #' @import ggplot2
 #' @export
-histogram <- function(df, variable, bin_width = 10, title = NULL, xlab = NULL, ylab = NULL,density_only = FALSE,
+custom_histogram <- function(df, variable, bin_width = 10, title = NULL, xlab = NULL, ylab = NULL,density_only = FALSE,
                       fill_color = "#0077B6", border_color = "white", overlayDensisty = FALSE, plot_title = NULL,
                       axis_text_size = 18, axis_title_size = 24, title_size = 28, axistext_angle = 0, title_pos =.5) {
   

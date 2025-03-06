@@ -16,7 +16,7 @@
 #' @import ggplot2 dplyr
 #' @importFrom RColorBrewer brewer.pal
 #' @export
-pie_chart <- function(df, xvar, plot_title = "Pie Chart", title_pos = 0.5, title_size = 28, 
+custom_piechart <- function(df, xvar, plot_title = "Pie Chart", title_pos = 0.5, title_size = 28, 
                       facet_var = NULL, facet_title_size = 24, legend_title = NULL, 
                       transform_to_doughnut = FALSE, data_label_size = 4, colorbrewer = "Paired") {
   
@@ -96,6 +96,3 @@ pie_chart <- function(df, xvar, plot_title = "Pie Chart", title_pos = 0.5, title
   return(p)
 }
 
-# Example usage:
-plot(pie_chart(df = mtcars, xvar = "gear", transform_to_doughnut = TRUE))
-#plot(pie_chart(df = mtcars, xvar = "gear", transform_to_doughnut = TRUE, facet_var = "carb"))

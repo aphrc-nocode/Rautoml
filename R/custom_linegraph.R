@@ -31,7 +31,7 @@
 #' @export
 
 # Function to plot a flexible line graph
-line_graph <- function(df, xvar, yvar = NULL, colorVar = NULL, line_size = 0.9,line_type = "solid", line_join = "round", addlinetype = FALSE,
+custom_linegraph <- function(df, xvar, yvar = NULL, colorVar = NULL, line_size = 0.9,line_type = "solid", line_join = "round", addlinetype = FALSE,
                        plot_title = NULL, xlab = NULL, ylab = NULL, title_pos = 0.5, title_size = 25, default_col = "#0077B6",
                        axis_title_size = 20, axis_text_size = 16, data_label_size = 10, axistext_angle = 0, legend_title = "", addpoints = FALSE, summary_type = "Total",colorbrewer = "Dark2") {
   
@@ -362,7 +362,3 @@ line_graph <- function(df, xvar, yvar = NULL, colorVar = NULL, line_size = 0.9,l
   
   return(p)
 }
-
-#Test
-#line_graph(df = mtcars, xvar = "gear", line_join = "mitre", addpoints = FALSE, line_size = 2, colorVar = "cyl", yvar = "mpg", summary_type = "Average", addlinetype = TRUE)
-

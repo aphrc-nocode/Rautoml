@@ -25,7 +25,7 @@
 #' @examples
 #' scatterplot_custom(df, "mpg", "hp", colorVar = "cyl", addsmooth = "lm")
 #' @export
-scatterplot_custom <- function(df, xvar, yvar, colorVar=NULL, line_size = 0.9, addsmooth = "none", seval = TRUE, addshape=TRUE, shapes = 1,
+custom_scatterplot <- function(df, xvar, yvar, colorVar=NULL, line_size = 0.9, addsmooth = "none", seval = TRUE, addshape=TRUE, shapes = 1,
                                plot_title = NULL, xlab = NULL, ylab = NULL, title_pos = 0.5, title_size = 25, default_col = "#0077B6",
                                axis_title_size = 20, axis_text_size = 16, axistext_angle = 0, legend_title = "", confelev = .95, colorbrewer = "Dark2"){
   
