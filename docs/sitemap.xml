@@ -1,102 +1,51 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>/404.html</loc>
-  </url>
-  <url>
-    <loc>/LICENSE-text.html</loc>
-  </url>
-  <url>
-    <loc>/authors.html</loc>
-  </url>
-  <url>
-    <loc>/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/collect_logs.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_df_metadata.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_dir.html</loc>
-  </url>
-  <url>
-    <loc>/reference/extract_value_labels.html</loc>
-  </url>
-  <url>
-    <loc>/reference/factor_numeric.html</loc>
-  </url>
-  <url>
-    <loc>/reference/filter_data.html</loc>
-  </url>
-  <url>
-    <loc>/reference/filter_missing_values_df.html</loc>
-  </url>
-  <url>
-    <loc>/reference/format_date_time.html</loc>
-  </url>
-  <url>
-    <loc>/reference/generate_data_summary.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_data_class.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_file_ext.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_file_name.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_outliers.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_range.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_type.html</loc>
-  </url>
-  <url>
-    <loc>/reference/ggunivariate.html</loc>
-  </url>
-  <url>
-    <loc>/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/missing_prop.html</loc>
-  </url>
-  <url>
-    <loc>/reference/na_codes.html</loc>
-  </url>
-  <url>
-    <loc>/reference/na_if_label.html</loc>
-  </url>
-  <url>
-    <loc>/reference/na_if_numeric.html</loc>
-  </url>
-  <url>
-    <loc>/reference/na_if_pattern.html</loc>
-  </url>
-  <url>
-    <loc>/reference/na_to_values.html</loc>
-  </url>
-  <url>
-    <loc>/reference/numeric_character.html</loc>
-  </url>
-  <url>
-    <loc>/reference/numeric_factor.html</loc>
-  </url>
-  <url>
-    <loc>/reference/recode_value_labels.html</loc>
-  </url>
-  <url>
-    <loc>/reference/relabel_missing_values.html</loc>
-  </url>
-  <url>
-    <loc>/reference/upload_data.html</loc>
-  </url>
-  <url>
-    <loc>/reference/write_data.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/LICENSE-text.html</loc></url>
+<url><loc>/reference/collect_logs.html</loc></url>
+<url><loc>/reference/combine_data.html</loc></url>
+<url><loc>/reference/create_df_metadata.html</loc></url>
+<url><loc>/reference/create_dir.html</loc></url>
+<url><loc>/reference/custom_barplot.html</loc></url>
+<url><loc>/reference/custom_boxplot.html</loc></url>
+<url><loc>/reference/custom_crosstab.html</loc></url>
+<url><loc>/reference/custom_histogram.html</loc></url>
+<url><loc>/reference/custom_linegraph.html</loc></url>
+<url><loc>/reference/custom_piechart.html</loc></url>
+<url><loc>/reference/custom_scatterplot.html</loc></url>
+<url><loc>/reference/custom_violin.html</loc></url>
+<url><loc>/reference/drop_missing_values.html</loc></url>
+<url><loc>/reference/extract_value_labels.html</loc></url>
+<url><loc>/reference/factor_numeric.html</loc></url>
+<url><loc>/reference/filter_data.html</loc></url>
+<url><loc>/reference/filter_missing_values_df.html</loc></url>
+<url><loc>/reference/format_date_time.html</loc></url>
+<url><loc>/reference/generate_data_summary.html</loc></url>
+<url><loc>/reference/get_data_class.html</loc></url>
+<url><loc>/reference/get_file_ext.html</loc></url>
+<url><loc>/reference/get_file_name.html</loc></url>
+<url><loc>/reference/get_outliers.html</loc></url>
+<url><loc>/reference/get_range.html</loc></url>
+<url><loc>/reference/get_type.html</loc></url>
+<url><loc>/reference/ggunivariate.html</loc></url>
+<url><loc>/reference/handle_outliers.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/missing_data_plot.html</loc></url>
+<url><loc>/reference/missing_prop.html</loc></url>
+<url><loc>/reference/na_codes.html</loc></url>
+<url><loc>/reference/na_if_category_multiple.html</loc></url>
+<url><loc>/reference/na_if_category_single.html</loc></url>
+<url><loc>/reference/na_if_label.html</loc></url>
+<url><loc>/reference/na_if_numeric.html</loc></url>
+<url><loc>/reference/na_if_pattern.html</loc></url>
+<url><loc>/reference/na_to_values.html</loc></url>
+<url><loc>/reference/numeric_character.html</loc></url>
+<url><loc>/reference/numeric_factor.html</loc></url>
+<url><loc>/reference/recode_value_labels.html</loc></url>
+<url><loc>/reference/relabel_missing_values.html</loc></url>
+<url><loc>/reference/rename_vars.html</loc></url>
+<url><loc>/reference/upload_data.html</loc></url>
+<url><loc>/reference/write_data.html</loc></url>
 </urlset>
+

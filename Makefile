@@ -39,8 +39,8 @@ autopipeR = defined
 
 Sources += README.md 
 Ignore += README.Rmd 
-README.md: README.Rmd
-	$(makemd)
+#README.md: README.Rmd
+#	$(makemd)
 
 vignettes/Rautoml_intro.pdf: vignettes/Rautoml_intro.Rmd
 	$(makepdf)
