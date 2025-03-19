@@ -1022,3 +1022,78 @@ rename_vars = function(df, old, new) {
 	)
 	return(df)
 }
+
+
+#' Check API
+#'
+#' Checks if there's store API
+#'
+#' @param name API name
+#'
+#' @return TRUE/FALSE
+#'
+#' @export
+
+check_api = function(name) {
+	x = Sys.getenv(name)
+	if (x=="") {
+		x = FALSE
+	} else {
+		gemini.R::setAPI(x)
+		x = TRUE
+	}
+	return(x)
+}
+
+#' Set API
+#'
+#' Set API based on the API name
+#'
+#' @param name API name 
+#' @param api API 
+#'
+#' @importFrom gemini.R setAPI
+#'
+#' @return NULL
+#'
+#' @export
+
+set_api = function(name, api) {
+	args = list(name = api)
+	names(args) = name
+	do.call("Sys.setenv", args)
+	api_key = Sys.getenv(name)
+	gemini.R::setAPI(api_key)
+}
+
+
+#' Extract logs
+#'
+#' Prepare lists objects for GPT
+#'
+#' @param log list object
+#'
+#' @export
+
+extract_list_logs = function(log) {
+  xx = lapply(names(log), function(l) {
+    x = paste0(l, ": ", log[l])
+    x = unlist(x)
+  })
+  xx
+}
+
+#' Create prompts
+#'
+#' Create all the prompts for GPT
+#'
+#' @param desc prompt for the GPT
+#' @param log list object
+#' @param add_info additional infomation for the prompt 
+#'
+#' @export
+
+create_prompts = function(desc="Help me describe the R output: ", log, add_info="Write in paragraph and provide details") {
+  out = paste0(desc, " ", paste0(log, collapse = "; "), ". ", add_info)
+  out
+}
