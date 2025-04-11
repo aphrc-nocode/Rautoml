@@ -14,6 +14,8 @@
 #' @param caption Optional. Table caption.
 #'
 #' @return A gtsummary table object.
+#' @import gtsummary
+#' @import dplyr
 #' @export
 #'
 #' @examples
@@ -24,8 +26,6 @@ custom_crosstab <- function(df, vars, by = NULL, strata = NULL, add.p = TRUE, ad
                      report_numeric = c("mean", "median"), numeric_summary = c("sd", "min-max"), 
                      drop_na = FALSE, caption = NULL) {
   
-  require(gtsummary)
-  require(dplyr)
   
   vars_col <- c(vars, strata, by)
   existing_vars <- c()
@@ -35,7 +35,7 @@ custom_crosstab <- function(df, vars, by = NULL, strata = NULL, add.p = TRUE, ad
     }
   }
   
-  df <- na.omit(df[, existing_vars])
+  df <- na.omit(df[, existing_vars, drop= FALSE])
   report_numeric <- match.arg(report_numeric)
   numeric_summary <- match.arg(numeric_summary)
   
