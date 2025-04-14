@@ -434,6 +434,25 @@ get_type = function(x) {
 	return(type)
 }
 
+#' Get variable types for all variables
+#'
+#' Get variable tupes for a data frame
+#'
+#' @param df data frame
+#'
+#' @export 
+#'
+
+get_types = function(df) {
+	x = sapply(df, get_type)
+	xn = names(x)
+	categorical_vars = xn[x %in% c("factor", "character")]
+	numeric_vars = setdiff(xn, categorical_vars)
+	return(list(categorical=categorical_vars, numeric=numeric_vars))
+}
+
+
+
 #' Convert levels to NA
 #'
 #' @param x input vector.
