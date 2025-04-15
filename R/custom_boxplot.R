@@ -83,6 +83,48 @@ custom_boxplot <- function(df, xvar = NULL, yvar, colorVar = NULL, plot_title = 
         guides(fill = guide_legend(title = ifelse(is.null(legend_title), "Legend", legend_title)))
     }
   }
+  else{
+    if ((is.null(xvar) || xvar == "") && (is.null(colorVar) || colorVar == "")) {
+        df1 <- as.data.frame(df[, c(yvar)])
+        names(df1) <- c("yvar1")
+        df1$yvar1 <- as.numeric(df1$yvar1)
+        
+        p <- ggplot(data = df1, aes(y = yvar1), fill = default_col) +
+          geom_boxplot(position = "dodge2", fill = default_col) +
+          stat_boxplot(geom = "errorbar")+coord_flip()
+      } else if ((!is.null(xvar) && xvar != "") && (is.null(colorVar) || colorVar == "")) {
+        df1 <- as.data.frame(df[, c(yvar, xvar)])
+        names(df1) <- c("yvar1", "xvar1")
+        df1$yvar1 <- as.numeric(df1$yvar1)
+        df1$xvar1 <- as.factor(df1$xvar1)
+        
+        p <- ggplot(data = df1, aes(y = yvar1, x = xvar1)) +
+          geom_boxplot(position = "dodge2", fill = default_col) +
+          stat_boxplot(geom = "errorbar")+coord_flip()
+      } else if ((!is.null(colorVar) && colorVar != "") && (is.null(xvar) || xvar == "")) {
+        df1 <- as.data.frame(df[, c(yvar, colorVar)])
+        names(df1) <- c("yvar1", "colorvar1")
+        df1$yvar1 <- as.numeric(df1$yvar1)
+        df1$colorvar1 <- as.factor(df1$colorvar1)
+        
+        p <- ggplot(data = df1, aes(y = yvar1, fill = colorvar1)) +
+          geom_boxplot(position = "dodge2") +
+          stat_boxplot(geom = "errorbar") +
+          guides(fill = guide_legend(title = ifelse(is.null(legend_title), "Legend", legend_title)))+coord_flip()
+      } else if ((!is.null(colorVar) && colorVar != "") && (!is.null(xvar) && xvar != "")) {
+        df1 <- as.data.frame(df[, c(xvar, yvar, colorVar)])
+        names(df1) <- c("xvar1", "yvar1", "colorvar1")
+        df1$yvar1 <- as.numeric(df1$yvar1)
+        df1$colorvar1 <- as.factor(df1$colorvar1)
+        df1$xvar1 <- as.factor(df1$xvar1)
+        
+        p <- ggplot(data = df1, aes(y = yvar1, x = xvar1, fill = colorvar1)) +
+          geom_boxplot(position = "dodge2") +
+          stat_boxplot(geom = "errorbar") +
+          guides(fill = guide_legend(title = ifelse(is.null(legend_title), "Legend", legend_title)))+coord_flip()
+      }
+    }
+  
   
   p <- p + theme_minimal() +
     xlab(ifelse(!is.null(xlab), xlab, "")) +
