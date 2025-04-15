@@ -69,7 +69,7 @@ custom_barplot <- function(df, xvar, yvar = NULL, vertical = TRUE, stackedtype =
     names(df_proportions) <- c("xvar1","total", "prop1","prop")
     
     p <-  ggplot2::ggplot(data = df_proportions, ggplot2::aes(x = xvar1, y=prop1))+ggplot2::geom_bar(stat = "identity", fill = default_col)+
-      ggplot2::geom_text(ggplot2::aes(x = xvar1, y = prop1 + 3, label =prop),
+      ggplot2::geom_text(ggplot2::aes(x = xvar1, y = prop1, label =prop,hjust=-0.05),
                 size = as.integer(data_label_size))+ylim(c(NA, max(df_proportions$prop1) + 5))+ggplot2::coord_flip() 
     
     
@@ -103,7 +103,7 @@ custom_barplot <- function(df, xvar, yvar = NULL, vertical = TRUE, stackedtype =
     
     p <- ggplot2::ggplot(data = df_proportions, ggplot2::aes(x = xvar1, y=prop1, fill = var2))+
       ggplot2::geom_bar(stat = "identity")+
-      ggplot2::geom_text(ggplot2::aes(x = xvar1, y = prop1+1, label = prop), 
+      ggplot2::geom_text(ggplot2::aes(x = xvar1, y = prop1, label = prop,hjust = -0.1), 
                 position = position_stack(vjust = 0.5), size = as.integer(data_label_size))+ggplot2::coord_flip()+
       ggplot2::guides(fill=ggplot2::guide_legend(title=ifelse(is.null(legend_title), "Legend", legend_title)))
     

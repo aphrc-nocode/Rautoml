@@ -25,3 +25,5 @@ custom_corrplot <- function(df = NULL, features = NULL, colorbrewer = "Dark2"){
   }
   return(p)
 }
+
+#custom_corrplot(df = mtcars1, features = names(mtcars1))
