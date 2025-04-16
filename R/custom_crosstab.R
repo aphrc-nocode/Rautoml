@@ -5,7 +5,6 @@
 #' @param df A data frame containing the data.
 #' @param vars Character vector of variables to summarize.
 #' @param by Optional. A categorical variable to group by.
-#' @param strata Optional. A categorical variable for stratification.
 #' @param add.p Logical. If TRUE (default), adds p-values.
 #' @param add.ci Logical. If TRUE, adds confidence intervals.
 #' @param report_numeric Character. Method to report numeric data ("mean" or "median").
@@ -23,8 +22,8 @@
 #' tablefun(df, vars = "Value", by = "Group")
 
 custom_crosstab <- function(df, vars, by = NULL, strata = NULL, add.p = TRUE, add.ci = FALSE, 
-                     report_numeric = c("mean", "median"), numeric_summary = c("sd", "min-max"), 
-                     drop_na = FALSE, caption = NULL) {
+                            report_numeric = c("mean", "median"), numeric_summary = c("sd", "min-max"), 
+                            drop_na = FALSE, caption = NULL) {
   
   vars_col <-  c(vars, strata, by)
   existing_vars <- c()
@@ -59,12 +58,8 @@ custom_crosstab <- function(df, vars, by = NULL, strata = NULL, add.p = TRUE, ad
     }
   }
   
-  if (!is.null(strata) && strata != "") {
-    allvars <- c(strata, by, vars)
-  } else {
     allvars <- c(by, vars)
-    
-  }
+
   #print(allvars)
   if (is.null(caption)) {
     caption <- paste0(names(df[vars[1]]), " by ", names(df[by]))
@@ -111,20 +106,12 @@ custom_crosstab <- function(df, vars, by = NULL, strata = NULL, add.p = TRUE, ad
     return(tab)
   }
   
-  if (!is.null(strata) && strata!="") {
-    tab <- (tab
-            %>% tbl_strata(
-              strata=all_of(strata),
-              .tbl_fun=
-                ~ .x
-              %>% ttfun()
-              , .combine_with = "tbl_stack"
-            )
-    )
-  } else {
     tab <- (tab
             %>% ttfun()
     )
-  }
   return(tab)
 }
+
+#custom_crosstab(df=mtcars, vars = c("wt", "disp", "cyl"), by = "qsec")
+
+

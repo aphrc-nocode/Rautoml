@@ -24,8 +24,6 @@ custom_crosstab(
 
 \item{by}{Optional. A categorical variable to group by.}
 
-\item{strata}{Optional. A categorical variable for stratification.}
-
 \item{add.p}{Logical. If TRUE (default), adds p-values.}
 
 \item{add.ci}{Logical. If TRUE, adds confidence intervals.}
