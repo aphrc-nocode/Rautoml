@@ -21,11 +21,11 @@
 #' df <- data.frame(Group = rep(c("A", "B"), each = 50), Value = rnorm(100))
 #' tablefun(df, vars = "Value", by = "Group")
 
-custom_crosstab <- function(df, vars, by = NULL, strata = NULL, add.p = TRUE, add.ci = FALSE, 
+custom_crosstab <- function(df, vars, by = NULL, add.p = TRUE, add.ci = FALSE, 
                             report_numeric = c("mean", "median"), numeric_summary = c("sd", "min-max"), 
                             drop_na = FALSE, caption = NULL) {
   
-  vars_col <-  c(vars, strata, by)
+  vars_col <-  c(vars, by)
   existing_vars <- c()
   for(var in vars_col) {
     if(var %in% names(df)) {
@@ -112,6 +112,6 @@ custom_crosstab <- function(df, vars, by = NULL, strata = NULL, add.p = TRUE, ad
   return(tab)
 }
 
-#custom_crosstab(df=mtcars, vars = c("wt", "disp", "cyl"), by = "qsec")
+#custom_crosstab(df=mtcars, vars = c("wt", "disp", "cyl"), by = "am")
 
 

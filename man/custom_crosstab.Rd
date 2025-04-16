@@ -8,7 +8,6 @@ custom_crosstab(
   df,
   vars,
   by = NULL,
-  strata = NULL,
   add.p = TRUE,
   add.ci = FALSE,
   report_numeric = c("mean", "median"),
