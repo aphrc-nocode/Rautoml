@@ -24,5 +24,3 @@ upload_data = function(path)UseMethod("upload_data")
 write_data = function(path, df)UseMethod("write_data")
 
 
-
-

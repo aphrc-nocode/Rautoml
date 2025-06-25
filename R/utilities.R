@@ -392,6 +392,7 @@ filter_data = function(df, pattern) {
 #' Proportion of missing values
 #'
 #' @param df input data frame
+#' @param return_exact TRUE?FALSE
 #'
 #' @return data.frame
 #'
@@ -400,16 +401,25 @@ filter_data = function(df, pattern) {
 #' @export
 #'
 
-missing_prop = function(df) {
+missing_prop = function(df, return_exact = FALSE) {
 	df = (df
 		|> dplyr::ungroup()
 		|> dplyr::summarise_all(~sum(is.na(.)|. %in% c("", " "))/n())
 		|> tidyr::pivot_longer(everything())
 		|> dplyr::arrange(desc(value))
 		|> dplyr::rename("variable"="name", "missing"="value")
-		|> dplyr::mutate(missing = scales::percent(missing))
-		|> as.data.frame()
 	)
+	if (return_exact) {
+		df = (df
+			|> dplyr::filter(missing>0)
+			|> as.data.frame()
+		)
+	} else {
+		df = (df
+			|> dplyr::mutate(missing = scales::percent(missing))
+			|> as.data.frame()
+		)	
+	}
 	return(df)
 }
 
@@ -1115,4 +1125,21 @@ extract_list_logs = function(log) {
 create_prompts = function(desc="Help me describe the R output: ", log, add_info="Write in paragraph and provide details") {
   out = paste0(desc, " ", paste0(log, collapse = "; "), ". ", add_info)
   out
+}
+
+#' Drop variables
+#'
+#' Drop variables from then dataset
+#'
+#' @param df data frame
+#' @param vars variables
+#'
+#' @export 
+#'
+
+drop_variables = function(df, vars) {
+	df = (df
+		|> dplyr::select(-dplyr::all_of(vars))
+	)
+	return(df)
 }
