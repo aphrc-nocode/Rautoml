@@ -60,6 +60,7 @@ pivottable_custom.Rout: R/pivottable_custom.R
 custom_crosstab.Rout: R/custom_crosstab.R
 custom_scatterplot.Rout: R/scatterplot_custom.R
 custom_violin.Rout: R/custom_violin.R
+preprocessing_utilities.Rout: R/preprocessing_utilities.R
 
 ######################################################################
 

@@ -4,10 +4,12 @@
 \alias{missing_prop}
 \title{Proportion of missing values}
 \usage{
-missing_prop(df)
+missing_prop(df, return_exact = FALSE)
 }
 \arguments{
 \item{df}{input data frame}
+
+\item{return_exact}{TRUE?FALSE}
 }
 \value{
 data.frame
