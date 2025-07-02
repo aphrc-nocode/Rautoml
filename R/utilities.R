@@ -1143,3 +1143,26 @@ drop_variables = function(df, vars) {
 	)
 	return(df)
 }
+
+#' Get nlevels of a factor or character variable
+#'
+#' @param df data.frame
+#' @param var variable
+#'
+#' @export
+#'
+
+get_nlevels = function(df=NULL, var) {
+	if (isTRUE(!is.null(df))) {
+		x = (df
+			|> dplyr::select(dplyr::all_of(var))
+			|> dplyr::pull()
+		)
+	} else {
+		x = var
+	}
+	x = length(unique(x[!is.na(x)]))
+	return(x)	
+}
+
+

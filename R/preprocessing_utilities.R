@@ -13,7 +13,7 @@
 #'
 #' @export
 
-preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_methods = c("omit", "missing_mean", "missing_median", "mode_median", "mode_mean", "knn", "knn_linear", "bag"), perform_fe=TRUE, perform_pca=FALSE, up_sample=FALSE, up_sample_type=c("random", "smote", "bsmote", "adasyn", "rose"), df_test=NULL, exclude=NULL) {
+preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_methods = c("omit", "missing_mean", "missing_median", "mode_median", "mode_mean", "knn", "knn_linear", "bag"), perform_fe=TRUE, perform_pca=FALSE, up_sample=FALSE, up_sample_type=c("random", "smote", "bsmote", "adasyn", "rose"), df_test=NULL, task=NULL, exclude=NULL) {
 	df_out = recipes::recipe(formula=model_form, data=df)
 	preprocess_result = list()
 
@@ -81,6 +81,9 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 				%>% recipes::step_nzv(recipes::all_predictors(), -recipes::all_of(exclude))
 			)
 		}
+		df_out = (df_out
+			%>% recipes::step_dummy(recipes::all_nominal_predictors())
+		)
 	}
 	
 	if (corr > 0) {
@@ -107,8 +110,16 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 		}
 	}
 	
-	if (!is.null(outcome_var) & outcome_var!="") {
-		if (up_sample) {
+	if (isTRUE(!is.null(outcome_var)) & isTRUE(outcome_var!="")) {
+		if (isTRUE(!is.null(task)) & isTRUE(task=="Classification")) {
+			df_out = (df_out
+				|> recipes::step_mutate_at(outcome_var, fn=function(x){
+					x = forcats::fct_relabel(x, make.names)
+					return(x)
+				})
+			)
+		}
+		if (isTRUE(up_sample)) {
 			up_sample_type = match.arg(up_sample_type)
 			switch(up_sample_type
 				, "random" = {
@@ -153,6 +164,13 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 			%>% recipes::bake(new_data=df_test)
 		)
 	}
+	
+	outcome_nlevels = NULL
+	if (isTRUE(!is.null(outcome_var)) & isTRUE(outcome_var!="")) {
+		if (isTRUE(!is.null(task)) & isTRUE(task=="Classification")) {
+			outcome_nlevels = get_nlevels(df_out, outcome_var)
+		}
+	}
 
 	if (!is.null(outcome_var) & outcome_var!="") {
 		preprocess_result$predictors_for_analysis = paste0(outcome_var, " was used as an outcome variable, while the following were used as predictors: ", paste0(colnames(df_out)[!colnames(df_out) %in% outcome_var], collapse=", "), ".")
@@ -166,7 +184,7 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 	}
 
 	preprocess_result = c(extract_recipe_text(prepped_recipe), paste0("• ", preprocess_result$predictors_for_analysis), preprocess_result$removed_vars)
-	return(list(df_train=df_out, df_test=df_test, df_original=df, recipes=prepped_recipe, preprocess_steps=preprocess_result))
+	return(list(train_dfdf=df_out, test_df=df_test, original_df=df, recipes=prepped_recipe, preprocess_steps=preprocess_result, outcome_nlevels=outcome_nlevels))
 }
 
 

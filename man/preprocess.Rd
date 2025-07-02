@@ -17,6 +17,7 @@ preprocess(
   up_sample = FALSE,
   up_sample_type = c("random", "smote", "bsmote", "adasyn", "rose"),
   df_test = NULL,
+  task = NULL,
   exclude = NULL
 )
 }
