@@ -87,13 +87,14 @@ boot_measures = function(model, df, outcome_var, problem_type, type="prob"){
 	x_df <- df[, colnames(df)[!colnames(df) %in% outcome_var]]
 	y <- df[, outcome_var, drop=TRUE]
 
-	if (problem_type=="classification") {
+	if (problem_type=="Classification") {
 	  if (inherits(model, "caretEnsemble")) {
 	    preds <- predict(model, newdata=x_df)
 	  } else {
 	    preds <- predict(model, newdata=x_df, type = type)
 	  }
 		preds$pred <- factor(apply(preds, 1, function(x)colnames(preds)[which.max(x)]), levels=levels(y))
+		base_lev_temp = colnames(preds)[[2]]
 		preds$obs <- y
 		ss <- twoClassSummary(preds, lev = levels(preds$obs))
 		pp <- prSummary(preds, lev = levels(preds$obs))
@@ -110,13 +111,22 @@ boot_measures = function(model, df, outcome_var, problem_type, type="prob"){
 
 		## ROCs
 #		base_lev <- levels(preds$pred)[1]
-		base_lev <-  model$levels[[2]]
-		rocr_pred <- prediction(preds[[base_lev]]
+		if (inherits(model, "caretEnsemble")) {
+			base_lev = model$ens_model$levels[[2]]
+		} else {
+			base_lev <-  model$levels[[2]]
+		}
+		
+		if (is.null(base_lev)) {
+			base_lev = base_lev_temp
+		}
+
+		rocr_pred <- ROCR::prediction(preds[[base_lev]]
 			, preds$obs
 		)
-		model_roc <- performance(rocr_pred, "tpr", "fpr")
+		model_roc <- ROCR::performance(rocr_pred, "tpr", "fpr")
 		roc_df <- data.frame(x = model_roc@x.values[[1]], y = model_roc@y.values[[1]])
-	} else if (problem_type=="regression") {
+	} else if (problem_type=="Regression") {
 		preds <- predict(model, x_df)
 		scores_df = data.frame(as.list(postResample(pred = preds, obs = y)))
 		roc_df = NULL
@@ -130,9 +140,9 @@ boot_measures = function(model, df, outcome_var, problem_type, type="prob"){
 #' @export
 
 boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, type="prob", model_name=NULL, report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary) {
-	if (problem_type=="classification") {
+	if (problem_type=="Classification") {
 		all <- c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F") 
-	} else if (problem_type=="regression") {
+	} else if (problem_type=="Regression") {
 		all <- c("RMSE", "Rsquared", "MAE") 
 	}
 
