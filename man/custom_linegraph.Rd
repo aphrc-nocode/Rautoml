@@ -26,7 +26,8 @@ custom_linegraph(
   legend_title = "",
   addpoints = FALSE,
   summary_type = "Total",
-  colorbrewer = "Dark2"
+  colorbrewer = "Dark2",
+  custom_theme = theme_minimal()
 )
 }
 \arguments{

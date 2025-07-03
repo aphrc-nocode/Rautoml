@@ -30,7 +30,7 @@ custom_boxplot <- function(df, xvar = NULL, yvar, colorVar = NULL, plot_title = 
                            vertical = TRUE, xlab = NULL, ylab = NULL, title_pos = 0.5, 
                            title_size = 25, default_col = "#0077B6", axis_title_size = 20, 
                            axis_text_size = 16, axistext_angle = 0, legend_title = "", 
-                           colorbrewer = "Dark2") {
+                           colorbrewer = "Dark2", custom_theme = theme_minimal()) {
   
   vars_col <- c(xvar, yvar, colorVar)
   existing_vars <- c()
@@ -126,7 +126,7 @@ custom_boxplot <- function(df, xvar = NULL, yvar, colorVar = NULL, plot_title = 
     }
   
   
-  p <- p + theme_minimal() +
+  p <- p + custom_theme +
     xlab(ifelse(!is.null(xlab), xlab, "")) +
     ylab(ifelse(!is.null(ylab), ylab, "")) +
     ggtitle(ifelse(!is.null(plot_title), plot_title, "")) +

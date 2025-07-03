@@ -12,16 +12,16 @@
 #'
 #' @examples
 #' custom_corrplot(df = mtcars, features = c("mpg", "hp", "wt"), colorbrewer = "YlGnBu")
-custom_corrplot <- function(df = NULL, features = NULL, colorbrewer = "Dark2"){
+custom_corrplot <- function(df = NULL, features = NULL, colorbrewer = "Dark2", custom_theme= theme_minimal()){
   if (!is.null(df) & !is.null(features) & length(features) > 1) {
     colors <- colorRampPalette(RColorBrewer::brewer.pal(9, colorbrewer))(100)
     p <- DataExplorer::plot_correlation(
       data = df[, features],
       type = "all",
-      ggtheme = ggplot2::theme_minimal()
+      ggtheme = custom_theme
     ) + ggplot2::scale_fill_gradientn(colors = colors)
   } else {
-    p <- ggplot2::ggplot() + ggplot2::theme_minimal()
+    p <- ggplot2::ggplot() + custom_theme
   }
   return(p)
 }

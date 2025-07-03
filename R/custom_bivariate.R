@@ -15,14 +15,14 @@
 #' @examples
 #' bivariate_plot(df = mtcars, outcome = "mpg", features = c("hp", "wt"), title = "MPG vs Features")
 bivariate_plot <- function(df, outcome = NULL, features = NULL,
-                           title = "", colorbrewer = "Dark2"){
+                           title = "", colorbrewer = "Dark2", custom_theme = theme_minimal()){
   if (!is.null(outcome) && !is.null(features)) {
     p <- GGally::ggbivariate(df, outcome = outcome, explanatory = features, title = title) +
       ggplot2::theme_minimal() +
       ggplot2::scale_fill_brewer(palette = colorbrewer) +
       ggplot2::theme(plot.title = ggplot2::element_text(size = 18, hjust = 0.5))
   } else {
-    p <- ggplot2::ggplot() + ggplot2::theme_minimal()
+    p <- ggplot2::ggplot() + custom_theme
   }
   
   return(p)

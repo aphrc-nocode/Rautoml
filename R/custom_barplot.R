@@ -28,7 +28,7 @@
 
 custom_barplot <- function(df, xvar, yvar = NULL, vertical = TRUE, stackedtype = TRUE, colorVar = NULL, bar_width = 0.9,default_col = "blue",
                     plot_title = NULL, xlab = NULL, ylab = "Percentage", title_pos = 0.5, title_size = 25,
-                    axis_title_size = 20, axis_text_size = 16, data_label_size = 10, axistext_angle = 0, legend_title = "", colorbrewer = "Dark2") {
+                    axis_title_size = 20, axis_text_size = 16, data_label_size = 10, axistext_angle = 0, legend_title = "", colorbrewer = "Dark2", custom_theme  = theme_minimal()) {
   
   
   vars_col <-  c(xvar, yvar, colorVar)
@@ -293,7 +293,7 @@ custom_barplot <- function(df, xvar, yvar = NULL, vertical = TRUE, stackedtype =
   } 
   
   p <-
-    p +ggplot2::theme_minimal()+ xlab(ifelse(!is.null(xlab), xlab, "")) + ylab(ifelse(!is.null(ylab), ylab, "")) +
+    p + custom_theme+ xlab(ifelse(!is.null(xlab), xlab, "")) + ylab(ifelse(!is.null(ylab), ylab, "")) +
     ggtitle(ifelse(!is.null(plot_title), plot_title, "")) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(

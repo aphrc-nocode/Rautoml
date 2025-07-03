@@ -4,7 +4,12 @@
 \alias{custom_corrplot}
 \title{Custom Correlation Plot using DataExplorer and ColorBrewer}
 \usage{
-custom_corrplot(df = NULL, features = NULL, colorbrewer = "Dark2")
+custom_corrplot(
+  df = NULL,
+  features = NULL,
+  colorbrewer = "Dark2",
+  custom_theme = theme_minimal()
+)
 }
 \arguments{
 \item{df}{A data frame containing the data.}

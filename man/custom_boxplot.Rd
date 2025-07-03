@@ -20,7 +20,8 @@ custom_boxplot(
   axis_text_size = 16,
   axistext_angle = 0,
   legend_title = "",
-  colorbrewer = "Dark2"
+  colorbrewer = "Dark2",
+  custom_theme = theme_minimal()
 )
 }
 \arguments{

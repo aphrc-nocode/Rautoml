@@ -23,7 +23,8 @@ custom_barplot(
   data_label_size = 10,
   axistext_angle = 0,
   legend_title = "",
-  colorbrewer = "Dark2"
+  colorbrewer = "Dark2",
+  custom_theme = theme_minimal()
 )
 }
 \arguments{

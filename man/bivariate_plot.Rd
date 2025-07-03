@@ -9,7 +9,8 @@ bivariate_plot(
   outcome = NULL,
   features = NULL,
   title = "",
-  colorbrewer = "Dark2"
+  colorbrewer = "Dark2",
+  custom_theme = theme_minimal()
 )
 }
 \arguments{

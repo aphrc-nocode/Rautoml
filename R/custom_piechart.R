@@ -18,7 +18,7 @@
 #' @export
 custom_piechart <- function(df, xvar, plot_title = "Pie Chart", title_pos = 0.5, title_size = 28, 
                       facet_var = NULL, facet_title_size = 24, legend_title = NULL, 
-                      transform_to_doughnut = FALSE, data_label_size = 4, colorbrewer = "Paired") {
+                      transform_to_doughnut = FALSE, data_label_size = 4, colorbrewer = "Paired", custom_theme = theme_void()) {
   
   # Check if the xvar exists in df
   if (!xvar %in% names(df)) {
