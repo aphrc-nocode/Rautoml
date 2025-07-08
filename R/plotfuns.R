@@ -215,19 +215,22 @@ plot.Rautomlmetric2 = function(est) {
 	all_plot = plot(all)
 
 	roc_df = est$roc_df
-	roc_df = (roc_df
-		|> left_join(
-			specifics
-			|> select(-metric)
-			, by = c("model")
+	if (isTRUE(!is.null(roc_df))) {
+		roc_df = (roc_df
+			|> dplyr::left_join(
+				specifics
+				|> select(-metric)
+				, by = c("model")
+			)
+			|> mutate(
+			  model = paste0(model, ": ", nice_round(estimate, lower, upper))
+			)
 		)
-		|> mutate(
-		  model = paste0(model, ": ", nice_round(estimate, lower, upper))
-		)
-	)
-
-	class(roc_df) = c("Rautomlroc", class(roc_df))
-	roc_plot = plot(roc_df)
+		class(roc_df) = c("Rautomlroc", class(roc_df))
+		roc_plot = plot(roc_df)
+	} else {
+		roc_plot = NULL
+	}
 	return(list(specifics=specifics_plot, all=all_plot, roc=roc_plot))
 }
 

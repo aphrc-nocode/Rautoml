@@ -163,7 +163,10 @@ boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, typ
 	out <- as.data.frame(out)
 	out$metric <- rownames(out)
 	out$model <- model_name
+	mm_name = c("model", "metric")
 	out_metric <- out[out$metric==report,]
+	out_metric <- out_metric[, union(mm_name, colnames(out_metric))]
+	out <- out[, union(mm_name, colnames(out))]
 	out <- list(out_metric, out)
 	names(out) <- c("specifics", "all")
 	## Generate ROC
@@ -171,6 +174,7 @@ boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, typ
 	roc_df <- roc$roc_df
 	if (NROW(roc_df)) {
 	  roc_df$model = model_name
+	  roc_df <- roc_df[, union("model", colnames(roc_df))]
 	}
 	out$roc_df <- roc_df
 	positive_cat <- roc$positive_cat
