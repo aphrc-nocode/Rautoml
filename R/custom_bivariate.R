@@ -17,8 +17,8 @@
 bivariate_plot <- function(df, outcome = NULL, features = NULL,
                            title = "", colorbrewer = "Dark2", custom_theme = theme_minimal()){
   if (!is.null(outcome) && !is.null(features)) {
-    p <- GGally::ggbivariate(df, outcome = outcome, explanatory = features, title = title) +
-      ggplot2::theme_minimal() +
+    p <- ggbivariate(df, outcome = outcome, explanatory = features, title = title) +
+      custom_theme +
       ggplot2::scale_fill_brewer(palette = colorbrewer) +
       ggplot2::theme(plot.title = ggplot2::element_text(size = 18, hjust = 0.5))
   } else {
@@ -28,5 +28,8 @@ bivariate_plot <- function(df, outcome = NULL, features = NULL,
   return(p)
 }
 
+#mtcars1 <- mtcars
+#mtcars1$gear <- as.factor(mtcars1$gear)
+#mtcars1$am <- as.factor(mtcars1$am)
 #bivariate_plot(df = mtcars1, outcome = "am", features = names(mtcars1)[names(mtcars1)!="am"])
 #bivariate_plot(df = mtcars1, outcome = "am", features = names(mtcars1)[names(mtcars1)!="am"], colorbrewer = "Accent")
