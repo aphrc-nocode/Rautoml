@@ -109,7 +109,7 @@ ORANGE1 <- "#F79747"
 ORANGE2 <- "#FAC090"
 
 base_theme <- function() {
-  theme_minimal(base_size = 12, base_family = "Helvetica") +
+  theme_minimal(base_size = 12) +
     theme(
       panel.grid.major = element_blank()
 		, panel.grid.minor = element_blank()
@@ -146,3 +146,127 @@ missing_data_plot = function(df, ...) {
 	)
 	return(p1)
 }
+
+#' Plot metrics from model training
+#'
+#' @param metric
+#'
+#' @export
+
+plot.Rautomlmetric = function(metric) {
+  p1 = (ggplot(metric, aes(x=reorder(model, -estimate), y=estimate, group=metric))
+    + geom_point()
+    + geom_pointrange(aes(ymin = lower, ymax = upper))
+    + labs(x = "Model", y="Score")
+    + metric_theme()
+  )
+  nclasses = length(unique(metric$model))
+  if (nclasses>3) {
+  	p1 = (p1
+		+ coord_flip()
+    	+ facet_wrap(~metric, scales = "free_x")
+	)
+  } else {
+  	p1 = (p1
+   	+ facet_wrap(~metric, scales = "free_y")
+	)
+  }
+  return(p1)
+}
+
+#' Plot ROC curve
+#'
+#' @param 
+#'
+#' @export
+#'
+
+plot.Rautomlroc = function(est) {
+roc_plot = (ggplot(est, aes(x = x, y = y, group = model, colour = reorder(model, -estimate)))
+	+ geom_line()
+	+ scale_x_continuous(limits = c(0, 1))
+	+ scale_y_continuous(limits = c(0, 1))
+	+ ggthemes::scale_colour_colorblind()
+   + geom_abline(intercept = 0, slope = 1, colour = "darkgrey", linetype = 2)
+	+ labs(x = "False positive rate"
+		, y = "True positive rate"
+		, colour = "Model"
+	)
+	+ metric_theme()
+	+ theme(legend.position="right")
+)
+}
+
+
+
+#' Plot metrics from model test
+#'
+#' @param est
+#'
+#' @export
+#'
+
+plot.Rautomlmetric2 = function(est) {
+	specifics = est$specifics
+	class(specifics) = c("Rautomlmetric", class(specifics))
+	specifics_plot = plot(specifics)
+	all = est$all
+	class(all) = c("Rautomlmetric", class(all))
+	all_plot = plot(all)
+
+	roc_df = est$roc_df
+	if (isTRUE(!is.null(roc_df))) {
+		roc_df = (roc_df
+			|> dplyr::left_join(
+				specifics
+				|> select(-metric)
+				, by = c("model")
+			)
+			|> mutate(
+			  model = paste0(model, ": ", nice_round(estimate, lower, upper))
+			)
+		)
+		class(roc_df) = c("Rautomlroc", class(roc_df))
+		roc_plot = plot(roc_df)
+	} else {
+		roc_plot = NULL
+	}
+	return(list(specifics=specifics_plot, all=all_plot, roc=roc_plot))
+}
+
+
+#' GGplot Theme for metrics
+#'
+
+metric_theme = function(){
+ theme_bw() +
+    theme(panel.spacing=grid::unit(0,"lines")
+    	, plot.title = element_text(hjust = 0.5)
+		, legend.position = "bottom"
+		, axis.ticks.y = element_blank()
+		, axis.text.x = element_text(size = 12)
+		, axis.text.y = element_text(size = 12)
+		, axis.title.x = element_text(size = 12)
+		, axis.title.y = element_text(size = 12)
+		, legend.title = element_text(size = 12, hjust = 0.5)
+		, legend.text = element_text(12)
+		, panel.grid.major = element_blank()
+		, legend.key.size = unit(0.8, "cm")
+		, legend.key = element_rect(fill = "white")
+		, panel.spacing.y = unit(0.3, "lines")
+		, panel.spacing.x = unit(1, "lines")
+		, strip.background = element_blank()
+		, strip.text.x = element_text(size = 11
+			, colour = "black"
+			, face = "bold"
+		)
+  )
+}
+
+#' Round off estimates 
+
+nice_round = function(x, y, z) {
+  s = paste0(round(x, 3), "[", round(y, 3), ", ", round(z, 3), "]")
+  return(s)
+}
+
