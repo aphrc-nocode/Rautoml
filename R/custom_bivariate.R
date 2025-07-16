@@ -10,7 +10,10 @@
 #' @param colorbrewer A string specifying the ColorBrewer palette to use (default is "Dark2").
 #'
 #' @return A ggplot2 object with the bivariate plots. Returns an empty plot if outcome or features are not provided.
-#' @export
+#' @import ggplot2
+#' @import GGally
+#' @import RColorBrewer
+#' @export 
 #'
 #' @examples
 #' bivariate_plot(df = mtcars, outcome = "mpg", features = c("hp", "wt"), title = "MPG vs Features")
@@ -21,7 +24,7 @@ bivariate_plot <- function(df, outcome = NULL, features = NULL,
     max_colors <- RColorBrewer::brewer.pal.info[colorbrewer, "maxcolors"]
       col_bre <- colorRampPalette(RColorBrewer::brewer.pal(max_colors, colorbrewer))(n)
       
-    p <- ggbivariate(df, outcome = outcome, explanatory = features, title = title) +
+    p <- GGally::ggbivariate(df, outcome = outcome, explanatory = features, title = title) +
       custom_theme +
       ggplot2::scale_fill_manual(values = col_bre) +
       ggplot2::theme(plot.title = ggplot2::element_text(size = 18, hjust = 0.5))
