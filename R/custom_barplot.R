@@ -28,7 +28,7 @@
 
 custom_barplot <- function(df, xvar, yvar = NULL, vertical = TRUE, stackedtype = TRUE, colorVar = NULL, bar_width = 0.9,default_col = "blue",
                     plot_title = NULL, xlab = NULL, ylab = "Percentage", title_pos = 0.5, title_size = 25,
-                    axis_title_size = 20, axis_text_size = 16, data_label_size = 10, axistext_angle = 0, legend_title = "", colorbrewer = "Dark2") {
+                    axis_title_size = 20, axis_text_size = 16, data_label_size = 10, axistext_angle = 0, legend_title = "", colorbrewer = "Dark2", custom_theme  = theme_minimal()) {
   
   
   vars_col <-  c(xvar, yvar, colorVar)
@@ -69,7 +69,7 @@ custom_barplot <- function(df, xvar, yvar = NULL, vertical = TRUE, stackedtype =
     names(df_proportions) <- c("xvar1","total", "prop1","prop")
     
     p <-  ggplot2::ggplot(data = df_proportions, ggplot2::aes(x = xvar1, y=prop1))+ggplot2::geom_bar(stat = "identity", fill = default_col)+
-      ggplot2::geom_text(ggplot2::aes(x = xvar1, y = prop1 + 3, label =prop),
+      ggplot2::geom_text(ggplot2::aes(x = xvar1, y = prop1, label =prop,hjust=-0.05),
                 size = as.integer(data_label_size))+ylim(c(NA, max(df_proportions$prop1) + 5))+ggplot2::coord_flip() 
     
     
@@ -103,7 +103,7 @@ custom_barplot <- function(df, xvar, yvar = NULL, vertical = TRUE, stackedtype =
     
     p <- ggplot2::ggplot(data = df_proportions, ggplot2::aes(x = xvar1, y=prop1, fill = var2))+
       ggplot2::geom_bar(stat = "identity")+
-      ggplot2::geom_text(ggplot2::aes(x = xvar1, y = prop1+1, label = prop), 
+      ggplot2::geom_text(ggplot2::aes(x = xvar1, y = prop1, label = prop,hjust = -0.1), 
                 position = position_stack(vjust = 0.5), size = as.integer(data_label_size))+ggplot2::coord_flip()+
       ggplot2::guides(fill=ggplot2::guide_legend(title=ifelse(is.null(legend_title), "Legend", legend_title)))
     
@@ -293,7 +293,7 @@ custom_barplot <- function(df, xvar, yvar = NULL, vertical = TRUE, stackedtype =
   } 
   
   p <-
-    p +ggplot2::theme_minimal()+ xlab(ifelse(!is.null(xlab), xlab, "")) + ylab(ifelse(!is.null(ylab), ylab, "")) +
+    p + custom_theme+ xlab(ifelse(!is.null(xlab), xlab, "")) + ylab(ifelse(!is.null(ylab), ylab, "")) +
     ggtitle(ifelse(!is.null(plot_title), plot_title, "")) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(

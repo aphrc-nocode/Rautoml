@@ -21,7 +21,7 @@
 #' @export
 custom_histogram <- function(df, variable, bin_width = 10, title = NULL, xlab = NULL, ylab = NULL,density_only = FALSE,
                       fill_color = "#0077B6", border_color = "white", overlayDensisty = FALSE, plot_title = NULL,
-                      axis_text_size = 18, axis_title_size = 24, title_size = 28, axistext_angle = 0, title_pos =.5) {
+                      axis_text_size = 18, axis_title_size = 24, title_size = 28, axistext_angle = 0, title_pos =.5, custom_theme = theme_minimal()) {
   
   df <- stats::na.omit(df[, c(variable), drop=FALSE])
   
@@ -62,7 +62,7 @@ custom_histogram <- function(df, variable, bin_width = 10, title = NULL, xlab = 
     }
     
     hist_p <-
-      hist_p+ggplot2::theme_minimal()+ ggplot2::xlab(ifelse(!is.null(xlab), xlab, "")) + ggplot2::ylab(ifelse(!is.null(ylab), ylab, "")) +
+      hist_p+custom_theme+ ggplot2::xlab(ifelse(!is.null(xlab), xlab, "")) + ggplot2::ylab(ifelse(!is.null(ylab), ylab, "")) +
       ggplot2::ggtitle(ifelse(!is.null(plot_title), plot_title, "")) +
       ggplot2::theme(
         plot.title = ggplot2::element_text(
@@ -76,7 +76,7 @@ custom_histogram <- function(df, variable, bin_width = 10, title = NULL, xlab = 
       )
     
   } else{
-    hist_p <- ggplot2::ggplot()
+    hist_p <- ggplot2::ggplot()+custom_theme
   }
   
   return(hist_p)

@@ -20,7 +20,8 @@ custom_histogram(
   axis_title_size = 24,
   title_size = 28,
   axistext_angle = 0,
-  title_pos = 0.5
+  title_pos = 0.5,
+  custom_theme = theme_minimal()
 )
 }
 \arguments{

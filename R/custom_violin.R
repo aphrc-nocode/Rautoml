@@ -24,7 +24,7 @@
 custom_violin <- function(df, xvar, yvar, colorVar = NULL, plot_title = NULL, vertical = TRUE, 
                           xlab = NULL, ylab = NULL, title_pos = 0.5, title_size = 25, default_col = "#0077B6",
                           axis_title_size = 20, axis_text_size = 16, axistext_angle = 0, legend_title = "", 
-                          colorbrewer = "Dark2") {
+                          colorbrewer = "Dark2", custom_theme= theme_minimal()) {
   
   vars_col <- c(xvar, yvar, colorVar)
   existing_vars <- vars_col[vars_col %in% names(df)]
@@ -69,7 +69,7 @@ custom_violin <- function(df, xvar, yvar, colorVar = NULL, plot_title = NULL, ve
     }
     
     p <- p +
-      ggplot2::theme_minimal() +
+      custom_theme +
       ggplot2::xlab(ifelse(!is.null(xlab), xlab, "")) +
       ggplot2::ylab(ifelse(!is.null(ylab), ylab, "")) +
       ggplot2::ggtitle(ifelse(!is.null(plot_title), plot_title, "")) + ggplot2::theme(
@@ -81,7 +81,7 @@ custom_violin <- function(df, xvar, yvar, colorVar = NULL, plot_title = NULL, ve
         legend.position = ifelse(is.null(colorVar), "none", "bottom")
       )
   } else {
-    p <- ggplot2::ggplot()
+    p <- ggplot2::ggplot()+custom_theme
   }
   
   return(p)

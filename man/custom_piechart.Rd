@@ -15,7 +15,8 @@ custom_piechart(
   legend_title = NULL,
   transform_to_doughnut = FALSE,
   data_label_size = 4,
-  colorbrewer = "Paired"
+  colorbrewer = "Paired",
+  custom_theme = theme_void()
 )
 }
 \arguments{

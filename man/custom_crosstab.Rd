@@ -8,7 +8,6 @@ custom_crosstab(
   df,
   vars,
   by = NULL,
-  strata = NULL,
   add.p = TRUE,
   add.ci = FALSE,
   report_numeric = c("mean", "median"),
@@ -23,8 +22,6 @@ custom_crosstab(
 \item{vars}{Character vector of variables to summarize.}
 
 \item{by}{Optional. A categorical variable to group by.}
-
-\item{strata}{Optional. A categorical variable for stratification.}
 
 \item{add.p}{Logical. If TRUE (default), adds p-values.}
 

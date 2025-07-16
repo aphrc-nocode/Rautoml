@@ -25,7 +25,8 @@ custom_scatterplot(
   axistext_angle = 0,
   legend_title = "",
   confelev = 0.95,
-  colorbrewer = "Dark2"
+  colorbrewer = "Dark2",
+  custom_theme = theme_minimal()
 )
 }
 \arguments{

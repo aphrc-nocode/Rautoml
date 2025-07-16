@@ -33,7 +33,8 @@
 # Function to plot a flexible line graph
 custom_linegraph <- function(df, xvar, yvar = NULL, colorVar = NULL, line_size = 0.9,line_type = "solid", line_join = "round", addlinetype = FALSE,
                        plot_title = NULL, xlab = NULL, ylab = NULL, title_pos = 0.5, title_size = 25, default_col = "#0077B6",
-                       axis_title_size = 20, axis_text_size = 16, data_label_size = 10, axistext_angle = 0, legend_title = "", addpoints = FALSE, summary_type = "Total",colorbrewer = "Dark2") {
+                       axis_title_size = 20, axis_text_size = 16, data_label_size = 10, axistext_angle = 0, legend_title = "", addpoints = FALSE, summary_type = "Total",colorbrewer = "Dark2",
+                       custom_theme = theme_minimal()) {
   
   vars_col <-  c(xvar, yvar, colorVar)
   existing_vars <- c()
@@ -345,7 +346,7 @@ custom_linegraph <- function(df, xvar, yvar = NULL, colorVar = NULL, line_size =
   }
   
   p <-
-    p +ggplot2::theme_minimal()+ ggplot2::xlab(ifelse(!is.null(xlab), xlab, "")) + ggplot2::ylab(ifelse(!is.null(ylab), ylab, "")) +
+    p +custom_theme+ ggplot2::xlab(ifelse(!is.null(xlab), xlab, "")) + ggplot2::ylab(ifelse(!is.null(ylab), ylab, "")) +
     ggplot2::ggtitle(ifelse(!is.null(plot_title), plot_title, "")) + ggplot2::theme(
       plot.title = ggplot2::element_text(
         hjust = as.numeric(title_pos),

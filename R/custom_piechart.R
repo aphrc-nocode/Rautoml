@@ -18,7 +18,7 @@
 #' @export
 custom_piechart <- function(df, xvar, plot_title = "Pie Chart", title_pos = 0.5, title_size = 28, 
                       facet_var = NULL, facet_title_size = 24, legend_title = NULL, 
-                      transform_to_doughnut = FALSE, data_label_size = 4, colorbrewer = "Paired") {
+                      transform_to_doughnut = FALSE, data_label_size = 4, colorbrewer = "Paired", custom_theme = theme_void()) {
   
   # Check if the xvar exists in df
   if (!xvar %in% names(df)) {
@@ -55,7 +55,7 @@ custom_piechart <- function(df, xvar, plot_title = "Pie Chart", title_pos = 0.5,
   }
   
   # Apply theme and labels
-  p <- p + ggplot2::theme_minimal() +
+  p <- p + custom_theme +
     ggplot2::xlab("") + ggplot2::ylab("") +
     ggplot2::guides(fill = ggplot2::guide_legend(title = ifelse(is.null(legend_title), "Legend", legend_title))) +
     ggplot2::ggtitle(plot_title) +
@@ -86,7 +86,7 @@ custom_piechart <- function(df, xvar, plot_title = "Pie Chart", title_pos = 0.5,
       ggplot2::coord_polar(theta = "y", start = 0) +
       ggplot2::geom_text(ggplot2::aes(y = lab.ypos, label = paste0(round(prop), "%")), 
                          color = "black", size = as.integer(data_label_size)) +
-      ggplot2::facet_wrap(. ~ .data[[facet_var]], ncol = 2) +
+      ggplot2::facet_wrap(. ~ .data[[facet_var]], ncol = 2) +custom_theme+
       ggplot2::theme(strip.text = ggplot2::element_text(size = facet_title_size, colour = "black"))
     
     if (transform_to_doughnut) {

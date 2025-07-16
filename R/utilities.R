@@ -357,7 +357,7 @@ write_data.rds = function(path, df) {
 #'
 #' @return NULL.
 #'
-#' @importFrom haven write_spss
+#' @importFrom haven write_sav
 #'
 #' @rdname write_data
 #'
