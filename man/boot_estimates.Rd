@@ -12,8 +12,9 @@ boot_estimates(
   nreps = 100,
   type = "prob",
   model_name = NULL,
-  report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall",
-    "F", "RMSE", "Rsquared", "MAE"),
+  report = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity",
+    "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate",
+    "Balanced_Accuracy", "logLoss", "RMSE", "Rsquared", "MAE"),
   summary_fun = quantile_summary
 )
 }

@@ -6,6 +6,9 @@
 \usage{
 \method{plot}{Rautomlroc}(est)
 }
+\arguments{
+\item{est}{}
+}
 \description{
 Plot ROC curve
 }

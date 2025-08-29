@@ -63,6 +63,7 @@ custom_violin.Rout: R/custom_violin.R
 preprocessing_utilities.Rout: R/preprocessing_utilities.R
 caret_models.Rout: R/caret_models.R
 metrics.Rout: R/metrics.R
+caret_shap_values.Rout: R/caret_shap_values.R
 
 
 ######################################################################

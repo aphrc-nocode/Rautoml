@@ -10,7 +10,7 @@
 #'
 
 
-extract_summary.caretList = function(models, summary_fun = quantile_summary) {
+extract_summary.list = function(models, summary_fun = quantile_summary) {
   if (length(models)==1) {
     res = models[[1]]$resample
     res$model = models[[1]]$method
@@ -75,7 +75,31 @@ quantile_summary = function(x, probs = c(0.025, 0.5, 0.975), names = c("lower", 
   x = as.data.frame(t(x))
   colnames(x) = names
   return(x)
-} 
+}
+
+
+#' Student-t based summary function
+#'
+#' @param x vector of numbers
+#'
+#' @export
+#'
+
+student_t_summary = function(x, conf.level = 0.95, names = c("lower", "estimate", "upper")) {
+  n <- length(x)
+  mean_x <- mean(x, na.rm = TRUE)
+  se <- sd(x, na.rm = TRUE) / sqrt(n)
+  error_margin <- qt(1 - (1 - conf.level) / 2, df = n - 1) * se
+
+  lower <- mean_x - error_margin
+  upper <- mean_x + error_margin
+  d = data.frame(lower, mean_x, upper)
+  colnames(d) = names
+  return(d)
+}
+
+
+
 
 #' Estimate predictive scores for a single model
 #'
@@ -83,65 +107,138 @@ quantile_summary = function(x, probs = c(0.025, 0.5, 0.975), names = c("lower", 
 #'
 #' @export
 
-boot_measures = function(model, df, outcome_var, problem_type, type="prob"){
-	x_df <- df[, colnames(df)[!colnames(df) %in% outcome_var]]
-	y <- df[, outcome_var, drop=TRUE]
 
-	if (problem_type=="Classification") {
-	  if (inherits(model, "caretEnsemble")) {
-	    preds <- predict(model, newdata=x_df)
-	  } else {
-	    preds <- predict(model, newdata=x_df, type = type)
-	  }
-		preds$pred <- factor(apply(preds, 1, function(x)colnames(preds)[which.max(x)]), levels=levels(y))
-		base_lev_temp = colnames(preds)[[2]]
-		preds$obs <- y
-		ss <- twoClassSummary(preds, lev = levels(preds$obs))
-		pp <- prSummary(preds, lev = levels(preds$obs))
-		aa <- confusionMatrix(preds$pred, preds$obs)$overall[["Accuracy"]]
-		scores_df <- data.frame(Accuracy = aa
-			, AUCROC = ss[["ROC"]]
-			, AUCRecall = pp[["AUC"]]
-			, Sens = ss[["Sens"]]
-			, Spec = ss[["Spec"]]
-			, Precision = pp[["Precision"]]
-			, Recall = pp[["Recall"]]
-			, "F" = pp[["F"]]
-		)
+boot_measures <- function(model, df, outcome_var, problem_type, type="prob") {
+  x_df <- df[, setdiff(colnames(df), outcome_var), drop=FALSE]
+  y <- df[[outcome_var]]
 
-		## ROCs
-#		base_lev <- levels(preds$pred)[1]
-		if (inherits(model, "caretEnsemble")) {
-			base_lev = model$ens_model$levels[[2]]
-		} else {
-			base_lev <-  model$levels[[2]]
-		}
-		
-		if (is.null(base_lev)) {
-			base_lev = base_lev_temp
-		}
+  if (problem_type == "Classification") {
+    if (inherits(model, "caretEnsemble")) {
+      preds <- predict(model, newdata=x_df)
+    } else {
+      preds <- predict(model, newdata=x_df, type=type)
+    }
 
-		rocr_pred <- ROCR::prediction(preds[[base_lev]]
-			, preds$obs
-		)
-		model_roc <- ROCR::performance(rocr_pred, "tpr", "fpr")
-		roc_df <- data.frame(x = model_roc@x.values[[1]], y = model_roc@y.values[[1]])
-	} else if (problem_type=="Regression") {
-		preds <- predict(model, x_df)
-		scores_df = data.frame(as.list(postResample(pred = preds, obs = y)))
-		roc_df = NULL
-		base_lev = NULL
-	}
-	return(list(scores_df=scores_df, roc_df=roc_df, positive_cat = base_lev))
+	 if (Rautoml::get_type(y)!="factor") {
+	 	y = as.factor(y)
+	 }
+
+    # Predicted class
+    .nn <- ncol(preds)
+    preds$pred <- factor(apply(preds[,1:.nn], 1, function(x) colnames(preds)[which.max(x)]),
+                         levels = levels(y))
+    preds$obs <- y
+
+	 mt = caret::multiClassSummary(preds, lev = levels(preds$obs))
+    scores_df = as.data.frame(as.list(mt))
+    colnames(scores_df) = gsub(".*Mean_", "", colnames(scores_df))
+	 all = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity", "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate", "Balanced_Accuracy", "logLoss")
+	 scores_df[, all] = scores_df[, all]
+
+    # --- Handle Binary vs Multiclass ---
+    if (nlevels(y) == 2) {
+      base_lev <- levels(y)[2]  
+
+      # ROC
+      rocr_pred <- ROCR::prediction(preds[[base_lev]], preds$obs)
+      model_roc <- ROCR::performance(rocr_pred, "tpr", "fpr")
+      roc_df <- data.frame(x = model_roc@x.values[[1]], y = model_roc@y.values[[1]])
+
+    } else {
+      base_lev <- NULL
+      
+		# Multiclass ROC (one-vs-rest)
+      y_mat <- model.matrix(~y-1)
+      colnames(y_mat) <- levels(y)
+      aucs <- c()
+      roc_df_list <- list()
+      for (lev in levels(y)) {
+        rocr_pred <- ROCR::prediction(preds[[lev]], y_mat[,lev])
+        auc_perf <- ROCR::performance(rocr_pred, "auc")
+        aucs[lev] <- auc_perf@y.values[[1]]
+
+        model_roc <- ROCR::performance(rocr_pred, "tpr", "fpr")
+        roc_df_list[[lev]] <- data.frame(
+          x = model_roc@x.values[[1]],
+          y = model_roc@y.values[[1]],
+          Class = lev
+        )
+      }
+      roc_df <- do.call(rbind, roc_df_list)
+    }
+
+  } else if (problem_type == "Regression") {
+    preds <- predict(model, x_df)
+    scores_df = data.frame(as.list(caret::postResample(pred = preds, obs = y)))
+    roc_df = NULL
+    base_lev = NULL
+  }
+
+  return(list(scores_df=scores_df, roc_df=roc_df, positive_cat=base_lev))
 }
+
+
+## boot_measures = function(model, df, outcome_var, problem_type, type="prob"){
+## 	x_df <- df[, colnames(df)[!colnames(df) %in% outcome_var]]
+## 	y <- df[, outcome_var, drop=TRUE]
+## 
+## 	if (problem_type=="Classification") {
+## 	  if (inherits(model, "caretEnsemble")) {
+## 	    preds <- predict(model, newdata=x_df)
+## 	  } else {
+## 	    preds <- predict(model, newdata=x_df, type = type)
+## 	  }
+## 	  .nn = ncol(preds)
+## 		preds$pred <- factor(apply(preds, 1, function(x)colnames(preds)[which.max(x)]), levels=levels(y))
+## 		base_lev_temp = colnames(preds)[[.nn]]
+## 		preds$obs <- y
+## 		ss <- model$control$summaryFunction(preds, lev = levels(preds$obs))
+## 		pp <- prSummary(preds, lev = levels(preds$obs))
+## 		aa <- confusionMatrix(preds$pred, preds$obs)$overall[["Accuracy"]]
+## 		scores_df <- data.frame(Accuracy = aa
+## 			, AUCROC = ss[["ROC"]]
+## 			, AUCRecall = pp[["AUC"]]
+## 			, Sens = ss[["Sens"]]
+## 			, Spec = ss[["Spec"]]
+## 			, Precision = pp[["Precision"]]
+## 			, Recall = pp[["Recall"]]
+## 			, "F" = pp[["F"]]
+## 		)
+## 
+## 		## ROCs
+## #		base_lev <- levels(preds$pred)[1]
+## 		if (inherits(model, "caretEnsemble")) {
+## 			base_lev = model$ens_model$levels[[2]]
+## 		} else {
+## 			base_lev <-  model$levels[[2]]
+## 		}
+## 		
+## 		if (is.null(base_lev)) {
+## 			base_lev = base_lev_temp
+## 		}
+## 
+## 		rocr_pred <- ROCR::prediction(preds[[base_lev]]
+## 			, preds$obs
+## 		)
+## 		model_roc <- ROCR::performance(rocr_pred, "tpr", "fpr")
+## 		roc_df <- data.frame(x = model_roc@x.values[[1]], y = model_roc@y.values[[1]])
+## 	} else if (problem_type=="Regression") {
+## 		preds <- predict(model, x_df)
+## 		scores_df = data.frame(as.list(postResample(pred = preds, obs = y)))
+## 		roc_df = NULL
+## 		base_lev = NULL
+## 	}
+## 	return(list(scores_df=scores_df, roc_df=roc_df, positive_cat = base_lev))
+## }
 
 #' Bootstrap estimate for the predictive measures
 #'
 #' @export
 
-boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, type="prob", model_name=NULL, report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary) {
+
+boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, type="prob", model_name=NULL, report = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity", "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate", "Balanced_Accuracy", "logLoss", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary) {
 	if (problem_type=="Classification") {
-		all <- c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F") 
+		all = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity", "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate", "Balanced_Accuracy", "logLoss")
 	} else if (problem_type=="Regression") {
 		all <- c("RMSE", "Rsquared", "MAE") 
 	}
@@ -228,3 +325,138 @@ boot_estimates_multiple.caretEnsemble = function(models, df, outcome_var, proble
   class(est) = c("Rautomlmetric2", class(est))
   return(est)
 }
+
+#' Generate confussion matrix and variable importance
+#'
+#' @export 
+#'
+
+get_post_metrics = function(model, outcome, df=NULL, task=NULL) {
+  preds = predict(model, newdata=df)
+  
+  if (isTRUE(task=="Classification")) {
+	  if (inherits(model, "caretEnsemble")) {
+		 preds = as.factor(colnames(preds)[max.col(preds, ties.method = "first")])
+	  }
+	  
+	  ## Confussion matrix
+	  cm = caret::confusionMatrix(preds, df[[outcome]])
+	  cm = as.data.frame(cm$table)
+	  colnames(cm) = c("Prediction", "Target", "N")
+	  cm_plot = cvms::plot_confusion_matrix(cm)
+  } else if (isTRUE(task=="Regression")) {
+		preds = as.numeric(unlist(preds))
+		actuals = df[[outcome]]
+		cm_plot = (ggplot2::ggplot(data.frame(actual=df[[outcome]], pred=preds), aes(x=actual, y=pred))
+			+ ggplot2::geom_point(alpha=0.6) 
+      	+ geom_smooth(method = lm, color="green", se = TRUE)
+#			+ ggplot2::geom_abline(slope=1, intercept=0, color="red") 
+			+ ggplot2::labs(title="Predicted vs Actual", x="Actual", y="Predicted")
+			+ theme_minimal(base_size = 12)
+		)
+  }
+  
+  if (!inherits(model, "caretEnsemble")) {
+    ## Overall variable importance
+    var_imp = try(caret::varImp(model), silent = TRUE)
+    if (inherits(var_imp, "try-error")) {
+      var_imp_plot = NULL
+    } else {
+      var_imp_plot = plot(var_imp)
+    }
+  } else {
+    var_imp_plot = NULL
+  }
+  return(list(cm_plot=cm_plot, var_imp_plot=var_imp_plot))
+}
+
+
+#' Generate confussion matrix and variable importance for caretlist
+#'
+#' @export 
+#'
+
+
+post_model_metrics.caretList = function(models, outcome, df=NULL, task=NULL) {
+  mets = lapply(models, function(model){
+    out = get_post_metrics(model=model, outcome=outcome, df=df, task=task)
+    out = list(cm_plot=out$cm_plot, var_imp_plot=out$var_imp_plot)
+    return(out)
+  })
+}
+
+
+#' Generate confussion matrix and variable importance for caretEnsemble
+#'
+#' @export 
+#'
+
+post_model_metrics.caretEnsemble = function(models, outcome, df=NULL, task=NULL) {
+  ensemble = get_post_metrics(model=models, outcome=outcome, df=df, task=task)
+  models = models$models
+  mets = lapply(models, function(model){
+    out = get_post_metrics(model=model, outcome=outcome, df=df, task=task)
+    out = list(cm_plot=out$cm_plot, var_imp_plot=out$var_imp_plot)
+    return(out)
+  })
+  mets = c(mets, list(ensemble=ensemble))
+  return(mets)
+}
+
+#' Get trained model metrics
+#'
+#' @param object metric object of class Rautomlmetric2
+#'
+#' @export 
+#'
+
+get_metrics_names.Rautomlmetric2 = function(object) {
+	all_metrics = sort(unique(object$all$metric))
+	return(all_metrics)
+}
+
+#' Extract sprcific metric for a particular model
+#'
+#' @param object metic object of class Rautomlmetric2
+#'
+#' @export 
+#'
+
+extract_more_metrics.Rautomlmetric2 = function(object, model_name, metric_name) {
+	all_ = (object$all
+		|> dplyr::filter(model %in% model_name)
+		|> dplyr::filter(metric %in% metric_name)
+	)	
+	if (!is.null(object$roc_df)) {
+		roc_df_ = (object$roc_df
+			|> dplyr::filter(model %in% model_name)
+		)
+	} else {
+		roc_df_ = NULL
+	}
+
+	object$specifics = NULL
+	object$all = all_
+	object$roc_df = roc_df_
+	return(object)
+}
+
+#' Filter models to show 
+#'
+#' @param object from `get_post_metrics`
+#'
+#' @export
+#'
+
+post_metrics_model_filter = function(object, model_name) {
+	object = object[names(object) %in% model_name]
+	return(object)
+}
+
+
+
+
+
+
+
+

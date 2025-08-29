@@ -1,3 +1,166 @@
+#' Variable importance plot for compute_shap object
+#'
+#' @param x compute_shap object
+
+plot_varimp = function(x, ..., pos = 0.5, drop_zero = TRUE, top_n=NULL){
+
+	x <- x[order(x$estimate), ]
+	if (drop_zero){
+		x <- x[x$estimate!=0, ]
+	}
+	x <- x[order(x$estimate, decreasing=TRUE), ]
+	if (!is.null(top_n)) {
+		x <- x[1:top_n, ]
+	}
+	x <- droplevels(x)
+
+  estimate <- NULL
+  lower <- NULL
+  upper <- NULL
+  nmods <- unique(x$model)
+  pos <- position_dodge(width = pos)
+  if (length(nmods)==1) {
+    p0 <- ggplot(x, aes(x = reorder(variable, estimate), y = estimate))
+  } else {
+    p0 <- (ggplot(x, aes(x = reorder(variable, estimate), y = estimate, colour = model))
+       + labs(colour = "Model")
+    )
+  }
+	p0 <- (p0
+		+ geom_point(position = pos)
+		+ geom_linerange(aes(ymin=lower, ymax=upper), position=pos)
+	)
+	p1 <- (p0
+		+ scale_colour_viridis_d(option = "inferno")
+		+ labs(x = "", y = "|SHAP value|")
+		+ theme_minimal()
+		+ coord_flip(clip = "off", expand = TRUE)
+	)
+	if (length(unique((x$Class)))>1) {
+	  p1 = (p1
+	    + facet_grid(Class~.)
+	  )
+	}
+	return(p1)
+}
+
+#' Variable dependency plot for compute_shap object
+#'
+#' @param x compute_shap object
+
+plot_vardep = function(x) {
+  nmods <- unique(x$model)
+  if (length(nmods)>1) {
+    p = (ggplot(x, aes(x=observed, y=score, color=model))
+      + geom_smooth(aes(color=model), se = FALSE)
+      + geom_point(color="grey", alpha = 0.5)
+    )
+  } else {
+    p = (ggplot(x, aes(x=observed, y=score))
+      + geom_smooth(color = "red", se = FALSE)
+      + geom_point(alpha = 0.5, color = "steelblue")
+    )
+  }
+  p = (p
+    + labs(x = "Observed values", y="SHAP value")
+    + theme_minimal()
+  )
+	if (length(unique((x$Class)))>1) {
+	  p = (p
+	    + facet_grid(Class~variable, scales = "free")
+	  )
+	} else {
+	  p = p + facet_wrap(~variable, scales = "free")
+	}
+  return(p)
+}
+
+#' Most frequently selected important variables plot for compute_shap object
+#'
+#' @param x compute_shap object
+
+plot_varfreq = function(x) {
+  p = (ggplot(x, aes(x=pos, y=fct_reorder(new_terms, -pos, .fun=mean), fill=n))
+  	+ geom_tile(color="black")
+  	+ scale_fill_distiller(palette = "Greens", direction=1)
+  	+ scale_y_discrete(expand=c(0,0))
+  	+ scale_x_continuous(
+  		breaks=function(x){1:max(x)}
+  		, labels=function(x){
+  			m = max(x)
+  			v = as.character(1:m)
+  			v[[m]] = paste0(">", m-1)
+  			return(v)
+  		}
+  		, expand=c(0,0)
+  	)
+  	+ labs(y="", x="Rank", fill="Frequency")
+  	+ theme_bw(base_size=12)
+  	+ theme(
+  		strip.background = element_blank()
+  		, panel.border = element_rect(colour = "grey"
+  			, fill = NA
+  			, size = 0.8
+  		)
+  		, strip.text.x = element_text(size = 11
+  			, colour = "black"
+  			, face = "bold"
+  		)
+  	)
+  )
+  if (length(unique(x$Class))>1) {
+    p = p + facet_wrap(~Class)
+  }
+  return(p)
+}
+
+#' Collect SHAP viz plots 
+#'
+#' @param vv compute_shap object with named models
+#' @param type various sv objets, either "sv_bw",  "sv_wf" or "sv_f"
+#'
+
+combine_shap_plots = function(vv, type) {
+  plots = Map(function(m, name) {
+    if (!is.null(m[[type]])) {
+      m[[type]] + theme_bw() + ggtitle(name)
+    } else {
+      NULL
+    }
+  }, vv, names(vv))
+  
+  plots = plots[!sapply(plots, is.null)]
+  plots = patchwork::wrap_plots(plots) + patchwork::plot_layout(guides = "collect", axis_titles = "collect")
+  return(plots)
+}
+
+#' Plot variable importance, most frequently identfied variables, dependency plots, and the SHAP values plots
+#'
+#' @param x compute_shap object
+#'
+#' @export
+
+plot.Rautomlshap = function(x, pos = 0.5, drop_zero = TRUE, top_n=NULL, ...) {
+  varimp_ = plot_varimp(x$varimp_df, pos=pos, drop_zero=drop_zero, top_n=top_n)
+  varfreq_ = plot_varfreq(x$varfreq_df)
+  vardep_ = plot_vardep(x$vardep_df)
+  sv_vis_ = x$sv_viz
+  beeswarm = combine_shap_plots(sv_vis_, "sv_bw")
+  waterfall = combine_shap_plots(sv_vis_, "sv_wf")
+  force  = combine_shap_plots(sv_vis_, "sv_f")
+  out = list(varimp = varimp_
+  	, varfreq=varfreq_
+	, vardep=vardep_
+	, beeswarm=beeswarm
+	, waterfall=waterfall
+	, force=force
+  )
+  return(out)
+}
+
+
+
+
 #' Univariate plots
 #'
 #' Plot univariate variable for a quick visualization.
@@ -176,7 +339,7 @@ plot.Rautomlmetric = function(metric) {
 
 #' Plot ROC curve
 #'
-#' @param 
+#' @param est 
 #'
 #' @export
 #'
@@ -208,8 +371,12 @@ roc_plot = (ggplot(est, aes(x = x, y = y, group = model, colour = reorder(model,
 
 plot.Rautomlmetric2 = function(est) {
 	specifics = est$specifics
-	class(specifics) = c("Rautomlmetric", class(specifics))
-	specifics_plot = plot(specifics)
+	if (!is.null(specifics)) {
+		class(specifics) = c("Rautomlmetric", class(specifics))
+		specifics_plot = plot(specifics)
+	} else {
+		specifics_plot = NULL
+	}
 	all = est$all
 	class(all) = c("Rautomlmetric", class(all))
 	all_plot = plot(all)
@@ -218,7 +385,9 @@ plot.Rautomlmetric2 = function(est) {
 	if (isTRUE(!is.null(roc_df))) {
 		roc_df = (roc_df
 			|> dplyr::left_join(
-				specifics
+				all
+				|> dplyr::filter(metric=="AUC")
+				|> dplyr::arrange(desc(estimate))
 				|> select(-metric)
 				, by = c("model")
 			)
@@ -228,6 +397,11 @@ plot.Rautomlmetric2 = function(est) {
 		)
 		class(roc_df) = c("Rautomlroc", class(roc_df))
 		roc_plot = plot(roc_df)
+		if (!is.null(roc_df$Class)) {
+		 roc_plot = (roc_plot
+			+ facet_wrap(~Class)
+		 )	
+		}
 	} else {
 		roc_plot = NULL
 	}

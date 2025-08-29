@@ -1165,4 +1165,14 @@ get_nlevels = function(df=NULL, var) {
 	return(x)	
 }
 
+#' Get RV objects by pattern
+#'
+#' @export
+#'
 
+get_rv_objects = function(pattern, object) {
+	all_names =  names(object)
+	name_fields = grep(pattern, all_names, value = TRUE)
+	out = unlist(lapply(name_fields, function(x) object[[x]]))
+	return(out)
+}

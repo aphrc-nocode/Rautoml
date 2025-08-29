@@ -51,3 +51,31 @@ create_ensemble = function(all.models, excluded_class_id = 0L, tuneLength = 100,
 #' @export 
 
 boot_estimates_multiple = function(models, df, outcome_var, problem_type, nreps, model_name, type, report, summary_fun)UseMethod("boot_estimates_multiple")
+
+
+#' Generate confussion matrix and variable importance for caretEnsemble
+#'
+#' @export 
+
+post_model_metrics = function(models, outcome, df=NULL, task=NULL)UseMethod("post_model_metrics")
+
+#' Get trained model metrics
+#'
+#' @export 
+#'
+
+get_metrics_names = function(object)UseMethod("get_metrics_names")
+
+
+#' Extract sprcific metric for a particular model
+#'
+#' @export 
+#'
+
+extract_more_metrics = function(object, model_name, metric_name)UseMethod("extract_more_metrics")
+
+#' Compute SHAP values for several caretEnsemble models
+#'
+#' @export
+
+compute_shap = function(models, model_names=NULL, newdata, response, task, nsim = 50, max_n=1000, top_n_rank=5, total_n_rank=20)UseMethod("compute_shap")
