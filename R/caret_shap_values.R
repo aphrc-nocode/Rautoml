@@ -194,6 +194,10 @@ extract_shap = function(x, top_n_rank, total_n_rank) {
   varimp_df = do.call("rbind", out[, "sv"])
   vardep_df = do.call("rbind", out[, "sv_dp"])
   sv_viz = out[, "sv_viz"]
+  nn = names(x)
+  if (length(nn)==1) {
+  	names(sv_viz) = nn
+  }
   
   ## Most frequent variables
   varfreq_df = (varimp_df
