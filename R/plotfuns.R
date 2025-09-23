@@ -383,20 +383,30 @@ plot.Rautomlmetric2 = function(est) {
 
 	roc_df = est$roc_df
 	if (isTRUE(!is.null(roc_df))) {
-		roc_df = (roc_df
-			|> dplyr::left_join(
-				all
-				|> dplyr::filter(metric=="AUC")
-				|> dplyr::arrange(desc(estimate))
-				|> select(-metric)
-				, by = c("model")
+		if (isTRUE(is.null(roc_df$.check_))) {
+			roc_df = (roc_df
+				|> dplyr::left_join(
+					all
+					|> dplyr::filter(metric=="AUC")
+					|> dplyr::arrange(desc(estimate))
+					|> select(-metric)
+					, by = c("model")
+				)
+				|> mutate(
+				  model = paste0(model, ": ", nice_round(estimate, lower, upper))
+				)
 			)
-			|> mutate(
-			  model = paste0(model, ": ", nice_round(estimate, lower, upper))
+			class(roc_df) = c("Rautomlroc", class(roc_df))
+			roc_plot = plot(roc_df)
+		} else {
+			roc_plot = (ggplot2::ggplot(roc_df, aes(x=x, y=y, colour=model))
+				+ ggplot2::geom_point(alpha=0.4) 
+				+ geom_smooth(method = lm, aes(colour=model), se = TRUE)
+				+ ggplot2::geom_abline(slope=1, intercept=0, color="black") 
+				+ ggplot2::labs(title="Predicted vs Actual", x="Actual", y="Predicted")
+				+ theme_minimal(base_size = 12)
 			)
-		)
-		class(roc_df) = c("Rautomlroc", class(roc_df))
-		roc_plot = plot(roc_df)
+		}
 		if (!is.null(roc_df$Class)) {
 		 roc_plot = (roc_plot
 			+ facet_wrap(~Class)

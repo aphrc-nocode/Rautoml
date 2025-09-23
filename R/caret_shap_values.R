@@ -264,6 +264,8 @@ compute_shap.caretEnsemble = function(models, model_names=NULL, newdata, respons
   base_models$ensemble$method = "ensemble"
   if (is.null(model_names)) {
     model_names = names(base_models)
+  } else {
+  	model_names = unique(c("ensemble", model_names))
   }
   out = sapply(model_names, function(model_name){
     model =  base_models[[model_name]]

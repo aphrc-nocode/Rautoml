@@ -108,7 +108,7 @@ student_t_summary = function(x, conf.level = 0.95, names = c("lower", "estimate"
 #' @export
 
 
-boot_measures <- function(model, df, outcome_var, problem_type, type="prob") {
+boot_measures = function(model, df, outcome_var, problem_type, type="prob") {
   x_df <- df[, setdiff(colnames(df), outcome_var), drop=FALSE]
   y <- df[[outcome_var]]
 
@@ -168,9 +168,9 @@ boot_measures <- function(model, df, outcome_var, problem_type, type="prob") {
     }
 
   } else if (problem_type == "Regression") {
-    preds <- predict(model, x_df)
+    preds = predict(model, x_df)
     scores_df = data.frame(as.list(caret::postResample(pred = preds, obs = y)))
-    roc_df = NULL
+    roc_df = data.frame(x=y, y=preds, .check_="pred_roc")
     base_lev = NULL
   }
 
@@ -350,7 +350,7 @@ get_post_metrics = function(model, outcome, df=NULL, task=NULL) {
 		cm_plot = (ggplot2::ggplot(data.frame(actual=df[[outcome]], pred=preds), aes(x=actual, y=pred))
 			+ ggplot2::geom_point(alpha=0.6) 
       	+ geom_smooth(method = lm, color="green", se = TRUE)
-#			+ ggplot2::geom_abline(slope=1, intercept=0, color="red") 
+			+ ggplot2::geom_abline(slope=1, intercept=0, color="red") 
 			+ ggplot2::labs(title="Predicted vs Actual", x="Actual", y="Predicted")
 			+ theme_minimal(base_size = 12)
 		)
