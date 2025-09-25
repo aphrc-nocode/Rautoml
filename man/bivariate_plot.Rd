@@ -10,7 +10,7 @@ bivariate_plot(
   features = NULL,
   title = "",
   colorbrewer = "Dark2",
-  custom_theme = theme_minimal()
+  custom_theme = ggplot2::theme_minimal()
 )
 }
 \arguments{

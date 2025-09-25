@@ -18,32 +18,41 @@
 #' @examples
 #' bivariate_plot(df = mtcars, outcome = "mpg", features = c("hp", "wt"), title = "MPG vs Features")
 bivariate_plot <- function(df, outcome = NULL, features = NULL,
-                           title = "", colorbrewer = "Dark2", custom_theme = theme_minimal()){
+                           title = "", colorbrewer = "Dark2",
+                           custom_theme = ggplot2::theme_minimal()) {
   if (!is.null(outcome) && !is.null(features)) {
-  if(is.numeric(outcome)){
-    p <- GGally::ggbivariate(df, outcome = outcome, explanatory = features, title = title) +
-      custom_theme +
-      ggplot2::theme(plot.title = ggplot2::element_text(size = 18, hjust = 0.5))
-  }else{
-    n= 100
-    max_colors <- RColorBrewer::brewer.pal.info[colorbrewer, "maxcolors"]
-    col_bre <- colorRampPalette(RColorBrewer::brewer.pal(max_colors, colorbrewer))(n)
-    p <- GGally::ggbivariate(df, outcome = outcome, explanatory = features, title = title) +
-      custom_theme +
-      ggplot2::scale_fill_manual(values = col_bre) +
-      ggplot2::theme(plot.title = ggplot2::element_text(size = 18, hjust = 0.5))
-  }
+    
+    # detect outcome type correctly
+    if (is.numeric(df[[outcome]])) {
+      p <- GGally::ggbivariate(df, outcome = outcome, explanatory = features, title = title) +
+        custom_theme +
+        ggplot2::theme(plot.title = ggplot2::element_text(size = 18, hjust = 0.5))
+    } else {
+      # ensure discrete scale
+      df[[outcome]] <- as.factor(df[[outcome]])
+      n_out <- nlevels(df[[outcome]])
+      max_cols <- RColorBrewer::brewer.pal.info[colorbrewer, "maxcolors"]
+      cols <- RColorBrewer::brewer.pal(min(max_cols, n_out), colorbrewer)
+      
+      p <- GGally::ggbivariate(df, outcome = outcome, explanatory = features, title = title) +
+        custom_theme +
+        ggplot2::scale_color_manual(values = cols) +  # lines/points
+        ggplot2::scale_fill_manual(values = cols) +   # bars/areas
+        ggplot2::theme(plot.title = ggplot2::element_text(size = 18, hjust = 0.5))
+    }
+    
   } else {
     p <- ggplot2::ggplot() + custom_theme
   }
   
-  return(p)
+  p
 }
+
 
 #mtcars1 <- mtcars
 #mtcars1$gear <- as.factor(mtcars1$gear)
 #mtcars1$am <- as.factor(mtcars1$am)
 #test <- bivariate_plot(df = mtcars1, outcome = "am", features = names(mtcars1)[names(mtcars1)!="am"])
 #ggbivariate(mtcars1, outcome = "am", explanatory = names(mtcars1)[names(mtcars1)!="am"], title = "")
-
+# 
 #bivariate_plot(df = mtcars1, outcome = "am", features = names(mtcars1)[names(mtcars1)!="am"], colorbrewer = "Accent")
