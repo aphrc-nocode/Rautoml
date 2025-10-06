@@ -100,6 +100,17 @@ collect_logs = function(path, pattern="*.log$") {
 	return(logs)
 }
 
+#' Check log files 
+#'
+#' @export
+#'
+
+check_logs = function(path, pattern="*.log$") {
+	x = length(list.files(path = path, pattern=pattern, full.names=TRUE))>0
+	return(x)
+}
+
+
 #' Get data class
 #'
 #' Assigns a class to the upload path or url based on the file extension.
@@ -927,7 +938,7 @@ handle_outliers = function(df, var, outliers, action, new_values=NULL, fun=NULL)
 	}
 	if (isTRUE(action=="drop")) {
 		df = (df
-			|> filter_at(dplyr::vars(var), dplyr::any_vars(!. %in% outliers))
+			|> dplyr::filter_at(dplyr::vars(var), dplyr::any_vars(!. %in% outliers))
 		)
 	} else if (isTRUE(action=="correct")) {
 		df = (df
@@ -1175,4 +1186,54 @@ get_rv_objects = function(pattern, object) {
 	name_fields = grep(pattern, all_names, value = TRUE)
 	out = unlist(lapply(name_fields, function(x) object[[x]]))
 	return(out)
+}
+
+
+#' Create trained model logs
+#'
+#' @export
+#'
+
+create_model_logs = function(df_name, session_name, outcome, framework, train_result, timestamp = Sys.time(), path=".log_files") {
+	x = data.frame(date_trained=as.POSIXct(round(timestamp)), dataset_id = df_name, outcome=outcome, session_name=session_name, framework=framework)
+	x = cbind.data.frame(x, train_result)
+	nn = paste0(path, "/", df_name, "-", session_name, "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), "-trained.model.main.log")
+	write.csv(x, nn, row.names=FALSE)
+}
+
+
+#' Check a value within a data frame
+#'
+#' Check a value within a dataframe
+#'
+#' @param df data frame
+#' @param var variable to search from
+#' @param what character string to search
+#'
+#' @export
+#'
+
+check_value_exists = function(df, var, what) {
+	x = (df
+		|> dplyr::select(dplyr::all_of(var))
+		|> dplyr::pull(var)
+		|> unique()
+	)
+	x = any(what %in% x)
+	return(x)
+}
+
+
+#' Filter session and metric
+#'
+#' @details Filter a metrics df based on session_name and metric
+#'
+#' @export
+#'
+
+filter_session_metric = function(df, metric_name, session_name_) {
+	df = (df
+		|> dplyr::filter(metric %in% metric_name, session_name %in% session_name_)
+	)
+	return(df)
 }
