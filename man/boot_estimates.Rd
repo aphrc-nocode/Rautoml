@@ -15,7 +15,11 @@ boot_estimates(
   report = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity",
     "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate",
     "Balanced_Accuracy", "logLoss", "RMSE", "Rsquared", "MAE"),
-  summary_fun = quantile_summary
+  summary_fun = quantile_summary,
+  save_model = FALSE,
+  model_id = paste0(model_name, "-", Sys.time()),
+  model_folder = "models",
+  preprocesses = NULL
 )
 }
 \description{

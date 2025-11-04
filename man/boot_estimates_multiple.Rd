@@ -13,7 +13,11 @@ boot_estimates_multiple(
   model_name,
   type,
   report,
-  summary_fun
+  summary_fun,
+  save_model,
+  model_id,
+  model_folder,
+  preprocesses
 )
 }
 \description{

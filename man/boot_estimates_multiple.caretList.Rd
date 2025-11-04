@@ -14,7 +14,11 @@
   type = "prob",
   report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall",
     "F", "RMSE", "Rsquared", "MAE"),
-  summary_fun = quantile_summary
+  summary_fun = quantile_summary,
+  save_model = FALSE,
+  model_id = paste0(model_name, "-", Sys.time()),
+  model_folder = "models",
+  preprocesses = NULL
 )
 }
 \description{

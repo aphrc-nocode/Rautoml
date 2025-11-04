@@ -449,6 +449,8 @@ get_type = function(x) {
 		type = "factor"
 	} else if (type=="character") {
 		type = "character"
+	} else if (type=="logical") {
+		type = "logical"	
 	} else {
 		type = "numeric"
 	}
@@ -1197,6 +1199,7 @@ get_rv_objects = function(pattern, object) {
 create_model_logs = function(df_name, session_name, outcome, framework, train_result, timestamp = Sys.time(), path=".log_files") {
 	x = data.frame(date_trained=as.POSIXct(round(timestamp)), dataset_id = df_name, outcome=outcome, session_name=session_name, framework=framework)
 	x = cbind.data.frame(x, train_result)
+	x = x[, union(c("date_trained", "model_id", "model"), colnames(x))]
 	nn = paste0(path, "/", df_name, "-", session_name, "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), "-trained.model.main.log")
 	write.csv(x, nn, row.names=FALSE)
 }
@@ -1231,9 +1234,114 @@ check_value_exists = function(df, var, what) {
 #' @export
 #'
 
-filter_session_metric = function(df, metric_name, session_name_) {
+filter_session_metric = function(df, metric_name, session_name_, model_name) {
 	df = (df
-		|> dplyr::filter(metric %in% metric_name, session_name %in% session_name_)
+		|> dplyr::filter(metric %in% metric_name, session_name %in% session_name_, model %in% model_name)
 	)
 	return(df)
+}
+
+#' Filter current dataset
+#'
+#' @details Filter a metrics df based on current data
+#'
+#' @export
+#'
+
+filter_current_data = function(df, dataset_id_) {
+	df = (df
+		|> dplyr::filter(dataset_id %in% dataset_id_)
+	)
+	return(df)
+}
+
+#' Filter deployed models
+#'
+#' @export 
+#'
+
+filter_deployed_models = function(df, model_ids) {
+	df = (df
+		|> dplyr::select(model_id, model)
+		|> dplyr::filter(model_id %in% model_ids)
+	)
+	return(df)
+}
+
+#' Start trained model API
+#'
+#' @details Creates an API to access trained model
+#'
+#' @export
+#'
+
+start_model_api <- function(folder, model_name, host = "127.0.0.1", port = NULL) {
+  if (is.null(port)) {
+		port = model_name_2port(model_name)
+		if (!is.numeric(port) | is.na(port)) {
+ 			port = httpuv::randomPort(min=5000, max=9999, host=host)
+		}
+  }
+  p = callr::r_bg(
+    func = function(folder, model_name, host, port) {
+      board = pins::board_folder(folder)
+      v = vetiver::vetiver_pin_read(board, name = model_name)
+      pr = plumber::pr() |> vetiver::vetiver_api(v)
+      plumber::pr_run(pr, host = host, port = port, docs = TRUE)
+    },
+    args = list(folder = folder, model_name = model_name, host = host, port = port)
+  )
+  u = sprintf("http://%s:%s", host, port) 
+  list(process=p
+    , url=u #paste0(u, "/predict")
+    , docs=sprintf("%s%s", u, "/__docs__/")
+  )
+}
+
+#' Create port number from model name
+#'
+#' @param x model name
+#'
+
+model_name_2port = function(x) {
+  hex = digest::digest(x, algo = "sha256")
+  num = strtoi(substr(hex, 1, 8), base = 16)
+  return(as.numeric(num %% 10000))
+}
+
+#' Check if API connection is created
+#'
+#' @param url
+#'
+#' @export
+
+check_api_connection = function(url, timeout=5) {
+  res = try(httr::GET(url, httr::timeout(timeout)), silent = TRUE)
+  if (inherits(res, "try-error")) {
+    return(FALSE)
+  } else {
+    return(httr::status_code(res) == 200)
+  }
+} 
+
+
+#' Check if columns in two datasets match
+#'
+#' @export
+#'
+
+check_columns = function(df1, df2) {
+  c1 = colnames(df1)
+  c2 = colnames(df2)
+  match_columns = setdiff(c1, c2)
+  check = FALSE
+  if (length(match_columns)==0) {
+    df1 = (df2
+      |> dplyr::select(dplyr::all_of(c1))
+    )
+	 check = TRUE
+  } else {
+    stop("The following columns are missing in new data: ", paste0(match_columns, collapse=","))
+  }
+  return(list(check=check, df=df1))
 }

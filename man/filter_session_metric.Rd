@@ -4,7 +4,7 @@
 \alias{filter_session_metric}
 \title{Filter session and metric}
 \usage{
-filter_session_metric(df, metric_name, session_name_)
+filter_session_metric(df, metric_name, session_name_, model_name)
 }
 \description{
 Filter session and metric

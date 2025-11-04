@@ -1,3 +1,137 @@
+#' Generate prediction prototype data
+#'
+#' @param df data.frame used to train the model
+#' @param outcome_var outcome variable
+#'
+#' @export
+#'
+
+create_pred_prototype = function(df, outcome_var=NULL) {
+  if (isTRUE(!is.null(outcome_var))) {
+    df = (df
+      |> dplyr::select(-dplyr::all_of(outcome_var))
+    )
+  }
+  x = sapply(df, function(x){
+    l = get_type(x)
+    if (any(l %in% c("factor", "character"))) {
+      m = levels(as.factor(x))
+    } else if (l == "numeric") {
+      m = mean(x, na.rm=TRUE)
+    } else if (l == "logical") {
+      m = c(TRUE, FALSE)
+    } else {
+      m = x[[1]]
+    }
+    return(m)
+  }, simplify = FALSE)
+  return(x)
+}
+
+#' Use endpoint to predict
+#'
+#'
+#' @export
+
+predict_endpoint = function(url, new_data, recipes=NULL, model_name=model) {
+  if (!is.null(recipes)) {
+    new_data = preprocess_new_data(recipes, new_data)
+  }
+  x = lapply(1:length(url), function(i) {
+  	  u = url[i]
+	  if (!grepl("\\/predict", u, ignore.case = TRUE)) {
+		 u = paste0(u, "/predict")
+	  }
+	  endpoint = vetiver::vetiver_endpoint(u)
+	  pred = predict(endpoint, new_data)
+	  pred = cbind.data.frame(pred, new_data)
+	  pred[["model_name"]] = model_name[i]
+	  pred = pred[, union(c("model_name", "value"), colnames(pred))]
+	  return(pred)
+  })
+  x = do.call("rbind", x)
+  return(x)
+}
+
+#' Get endpoint objects or data
+#'
+#' @export 
+#'
+
+get_endpoint_data = function(url, endpoint=c("ping", "metadata", "prototype")) {
+  endpoint = match.arg(endpoint)
+  res = httr::GET(paste0(url, "/", endpoint))
+  meta = httr::content(res, as = "parsed", type = "application/json")
+  if (endpoint=="metadata") {
+    template = meta$user$template
+    template = as.data.frame(lapply(template, function(x) unlist(x))) # as.data.frame(do.call("cbind", template))
+    prototype = meta$user$prototype
+    recipes = meta$user$recipes
+    meta = list(template=template, prototype=prototype, recipes=recipes)
+  }
+  return(meta)
+}
+
+#' Preprocess new data
+#'
+#' @details Preprocess new (incoming) data for prediction.
+#'
+#' @param recipes preprocessed recipes object
+#' @param new_data new data
+#'
+#' @export 
+
+preprocess_new_data = function(recipes, new_data) {
+  df = (recipes
+    |> recipes::bake(new_data = new_data)
+  )
+  return(df)
+}
+
+#' Save trained model
+#'
+#' @details Save a trained model into local storage
+#'
+#' @param model trained model object
+#' @param name character specifying the model
+#' @param folder local folder to store the models
+#'
+#' @export 
+#'
+
+save_model = function(model, name, folder="models", metadata=list()) {
+  Rautoml::create_dir(folder)
+  board = pins::board_folder(folder)
+  v = vetiver::vetiver_model(
+    model = model
+    , model_name = name # digest::digest(name, algo = "sha256")
+	 , metadata=metadata
+  )
+  vetiver::vetiver_pin_write(board, v)
+}
+
+#' Save recipes
+#'
+#' @export
+#'
+
+save_recipes = function(recipes, name, folder="recipes") {
+  Rautoml::create_dir(folder)
+  board = pins::board_folder(folder)
+  pins::pin_write(board=board, x=recipes, name=name, type="rds")
+}
+
+#' Read saved recipes 
+#'
+#' @export
+#'
+
+get_recipes = function(name, folder="recipes") {
+  board = pins::board_folder(folder)
+  x = pins::pin_read(board, name=name)
+  return(x)
+}
+
 #' Collect model summary
 #'
 #' @details This function extracts and summarizes model estimates from careList object.
@@ -51,9 +185,9 @@ extract_summary.caretEnsemble = function(models, summary_fun = quantile_summary)
   score2$model = "Ensemble"
   score2 = (score2
     |> tidyr::gather(-Resample, -model, key="metric", value = "score")
-    |> group_by(model, metric)
-    |> summarise(summary_fun(score), .groups = "drop")
-    |> ungroup()
+    |> dplyr::group_by(model, metric)
+    |> dplyr::summarise(summary_fun(score), .groups = "drop")
+    |> dplyr::ungroup()
   )
   res = do.call("rbind", list(score1, score2))
   class(res) = c(class(res), "Rautomlmetric")
@@ -86,13 +220,13 @@ quantile_summary = function(x, probs = c(0.025, 0.5, 0.975), names = c("lower", 
 #'
 
 student_t_summary = function(x, conf.level = 0.95, names = c("lower", "estimate", "upper")) {
-  n <- length(x)
-  mean_x <- mean(x, na.rm = TRUE)
-  se <- sd(x, na.rm = TRUE) / sqrt(n)
-  error_margin <- qt(1 - (1 - conf.level) / 2, df = n - 1) * se
+  n = length(x)
+  mean_x = mean(x, na.rm = TRUE)
+  se = sd(x, na.rm = TRUE) / sqrt(n)
+  error_margin = qt(1 - (1 - conf.level) / 2, df = n - 1) * se
 
-  lower <- mean_x - error_margin
-  upper <- mean_x + error_margin
+  lower = mean_x - error_margin
+  upper = mean_x + error_margin
   d = data.frame(lower, mean_x, upper)
   colnames(d) = names
   return(d)
@@ -109,14 +243,14 @@ student_t_summary = function(x, conf.level = 0.95, names = c("lower", "estimate"
 
 
 boot_measures = function(model, df, outcome_var, problem_type, type="prob") {
-  x_df <- df[, setdiff(colnames(df), outcome_var), drop=FALSE]
-  y <- df[[outcome_var]]
+  x_df = df[, setdiff(colnames(df), outcome_var), drop=FALSE]
+  y = df[[outcome_var]]
 
   if (problem_type == "Classification") {
     if (inherits(model, "caretEnsemble")) {
-      preds <- predict(model, newdata=x_df)
+      preds = predict(model, newdata=x_df)
     } else {
-      preds <- predict(model, newdata=x_df, type=type)
+      preds = predict(model, newdata=x_df, type=type)
     }
 
 	 if (Rautoml::get_type(y)!="factor") {
@@ -124,10 +258,10 @@ boot_measures = function(model, df, outcome_var, problem_type, type="prob") {
 	 }
 
     # Predicted class
-    .nn <- ncol(preds)
-    preds$pred <- factor(apply(preds[,1:.nn], 1, function(x) colnames(preds)[which.max(x)]),
+    .nn = ncol(preds)
+    preds$pred = factor(apply(preds[,1:.nn], 1, function(x) colnames(preds)[which.max(x)]),
                          levels = levels(y))
-    preds$obs <- y
+    preds$obs = y
 
 	 mt = caret::multiClassSummary(preds, lev = levels(preds$obs))
     scores_df = as.data.frame(as.list(mt))
@@ -137,34 +271,34 @@ boot_measures = function(model, df, outcome_var, problem_type, type="prob") {
 
     # --- Handle Binary vs Multiclass ---
     if (nlevels(y) == 2) {
-      base_lev <- levels(y)[2]  
+      base_lev = levels(y)[2]  
 
       # ROC
-      rocr_pred <- ROCR::prediction(preds[[base_lev]], preds$obs)
-      model_roc <- ROCR::performance(rocr_pred, "tpr", "fpr")
-      roc_df <- data.frame(x = model_roc@x.values[[1]], y = model_roc@y.values[[1]])
+      rocr_pred = ROCR::prediction(preds[[base_lev]], preds$obs)
+      model_roc = ROCR::performance(rocr_pred, "tpr", "fpr")
+      roc_df = data.frame(x = model_roc@x.values[[1]], y = model_roc@y.values[[1]])
 
     } else {
-      base_lev <- NULL
+      base_lev = NULL
       
 		# Multiclass ROC (one-vs-rest)
-      y_mat <- model.matrix(~y-1)
-      colnames(y_mat) <- levels(y)
-      aucs <- c()
-      roc_df_list <- list()
+      y_mat = model.matrix(~y-1)
+      colnames(y_mat) = levels(y)
+      aucs = c()
+      roc_df_list = list()
       for (lev in levels(y)) {
-        rocr_pred <- ROCR::prediction(preds[[lev]], y_mat[,lev])
-        auc_perf <- ROCR::performance(rocr_pred, "auc")
-        aucs[lev] <- auc_perf@y.values[[1]]
+        rocr_pred = ROCR::prediction(preds[[lev]], y_mat[,lev])
+        auc_perf = ROCR::performance(rocr_pred, "auc")
+        aucs[lev] = auc_perf@y.values[[1]]
 
-        model_roc <- ROCR::performance(rocr_pred, "tpr", "fpr")
-        roc_df_list[[lev]] <- data.frame(
+        model_roc = ROCR::performance(rocr_pred, "tpr", "fpr")
+        roc_df_list[[lev]] = data.frame(
           x = model_roc@x.values[[1]],
           y = model_roc@y.values[[1]],
           Class = lev
         )
       }
-      roc_df <- do.call(rbind, roc_df_list)
+      roc_df = do.call(rbind, roc_df_list)
     }
 
   } else if (problem_type == "Regression") {
@@ -178,104 +312,65 @@ boot_measures = function(model, df, outcome_var, problem_type, type="prob") {
 }
 
 
-## boot_measures = function(model, df, outcome_var, problem_type, type="prob"){
-## 	x_df <- df[, colnames(df)[!colnames(df) %in% outcome_var]]
-## 	y <- df[, outcome_var, drop=TRUE]
-## 
-## 	if (problem_type=="Classification") {
-## 	  if (inherits(model, "caretEnsemble")) {
-## 	    preds <- predict(model, newdata=x_df)
-## 	  } else {
-## 	    preds <- predict(model, newdata=x_df, type = type)
-## 	  }
-## 	  .nn = ncol(preds)
-## 		preds$pred <- factor(apply(preds, 1, function(x)colnames(preds)[which.max(x)]), levels=levels(y))
-## 		base_lev_temp = colnames(preds)[[.nn]]
-## 		preds$obs <- y
-## 		ss <- model$control$summaryFunction(preds, lev = levels(preds$obs))
-## 		pp <- prSummary(preds, lev = levels(preds$obs))
-## 		aa <- confusionMatrix(preds$pred, preds$obs)$overall[["Accuracy"]]
-## 		scores_df <- data.frame(Accuracy = aa
-## 			, AUCROC = ss[["ROC"]]
-## 			, AUCRecall = pp[["AUC"]]
-## 			, Sens = ss[["Sens"]]
-## 			, Spec = ss[["Spec"]]
-## 			, Precision = pp[["Precision"]]
-## 			, Recall = pp[["Recall"]]
-## 			, "F" = pp[["F"]]
-## 		)
-## 
-## 		## ROCs
-## #		base_lev <- levels(preds$pred)[1]
-## 		if (inherits(model, "caretEnsemble")) {
-## 			base_lev = model$ens_model$levels[[2]]
-## 		} else {
-## 			base_lev <-  model$levels[[2]]
-## 		}
-## 		
-## 		if (is.null(base_lev)) {
-## 			base_lev = base_lev_temp
-## 		}
-## 
-## 		rocr_pred <- ROCR::prediction(preds[[base_lev]]
-## 			, preds$obs
-## 		)
-## 		model_roc <- ROCR::performance(rocr_pred, "tpr", "fpr")
-## 		roc_df <- data.frame(x = model_roc@x.values[[1]], y = model_roc@y.values[[1]])
-## 	} else if (problem_type=="Regression") {
-## 		preds <- predict(model, x_df)
-## 		scores_df = data.frame(as.list(postResample(pred = preds, obs = y)))
-## 		roc_df = NULL
-## 		base_lev = NULL
-## 	}
-## 	return(list(scores_df=scores_df, roc_df=roc_df, positive_cat = base_lev))
-## }
-
 #' Bootstrap estimate for the predictive measures
 #'
 #' @export
 
 
-boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, type="prob", model_name=NULL, report = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity", "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate", "Balanced_Accuracy", "logLoss", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary) {
+boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, type="prob", model_name=NULL, report = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity", "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate", "Balanced_Accuracy", "logLoss", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary, save_model=FALSE, model_id=paste0(model_name, "-", Sys.time()), model_folder="models", preprocesses=NULL) {
 	if (problem_type=="Classification") {
 		all = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity", "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate", "Balanced_Accuracy", "logLoss")
 	} else if (problem_type=="Regression") {
-		all <- c("RMSE", "Rsquared", "MAE") 
+		all = c("RMSE", "Rsquared", "MAE") 
 	}
 
   if (is.null(model_name)) {
     model_name = model$method
+	 model_id = paste0(model_name, "-", Sys.time())
   }
   
 	if (!any(all %in% report)) {
 		stop(c("The report options are ", paste0(all, collapse=", ")))
 	}
-	resamples <- createResample(1:nrow(df), times = nreps, list = TRUE)
-	est <- lapply(resamples, function(x){
+	resamples = createResample(1:nrow(df), times = nreps, list = TRUE)
+	est = lapply(resamples, function(x){
 		boot_measures(model=model, df=df[x, ], outcome_var=outcome_var, problem_type=problem_type, type = type)$scores_df
 	})
-	out <- do.call(rbind, est)
-	out <- sapply(out, summary_fun, simplify=FALSE)
-	out <- do.call("rbind", out)
-	out <- as.data.frame(out)
-	out$metric <- rownames(out)
-	out$model <- model_name
-	mm_name = c("model", "metric")
-	out_metric <- out[out$metric==report,]
-	out_metric <- out_metric[, union(mm_name, colnames(out_metric))]
-	out <- out[, union(mm_name, colnames(out))]
-	out <- list(out_metric, out)
-	names(out) <- c("specifics", "all")
-	## Generate ROC
-	roc <- boot_measures(model, df, outcome_var, problem_type)
-	roc_df <- roc$roc_df
-	if (NROW(roc_df)) {
-	  roc_df$model = model_name
-	  roc_df <- roc_df[, union("model", colnames(roc_df))]
+	out = do.call(rbind, est)
+	out = sapply(out, summary_fun, simplify=FALSE)
+	out = do.call("rbind", out)
+	out = as.data.frame(out)
+	out$metric = rownames(out)
+	out$model = model_name
+	model_id = digest::digest(model_id, algo = "xxhash32")
+	out$model_id = model_id
+	mm_name = c("model_id", "model", "metric")
+	if (save_model) {
+		dd = preprocesses$original_df
+		metadata = list(
+			template = dd |> head() |> dplyr::select(-dplyr::all_of(outcome_var))
+			, prototype = create_pred_prototype(df=dd, outcome_var=outcome_var)
+			, recipes = model_id
+		)
+		save_recipes(preprocesses$recipes, name=model_id, folder="recipes")
+		save_model(model=model, name=model_id, folder=model_folder, metadata=metadata)
 	}
-	out$roc_df <- roc_df
-	positive_cat <- roc$positive_cat
-	out$positive_cat <- positive_cat
+	out_metric = out[out$metric==report,]
+	out_metric = out_metric[, union(mm_name, colnames(out_metric))]
+	out = out[, union(mm_name, colnames(out))]
+	out = list(out_metric, out)
+	names(out) = c("specifics", "all")
+	## Generate ROC
+	roc = boot_measures(model, df, outcome_var, problem_type)
+	roc_df = roc$roc_df
+	if (NROW(roc_df)) {
+	  roc_df$model_id = model_id
+	  roc_df$model = model_name
+	  roc_df = roc_df[, union(c("model_id", "model"), colnames(roc_df))]
+	}
+	out$roc_df = roc_df
+	positive_cat = roc$positive_cat
+	out$positive_cat = positive_cat
 	return(out)
 }
 
@@ -285,7 +380,7 @@ boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, typ
 #' @export 
 
 
-boot_estimates_multiple.caretList = function(models, df, outcome_var, problem_type, nreps = 100, model_name=NULL, type="prob", report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary) {
+boot_estimates_multiple.caretList = function(models, df, outcome_var, problem_type, nreps = 100, model_name=NULL, type="prob", report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary, save_model=FALSE, model_id=paste0(model_name, "-", Sys.time()), model_folder="models", preprocesses=NULL) {
   est = lapply(models, function(x){
     est = boot_estimates(
       model=x
@@ -297,6 +392,10 @@ boot_estimates_multiple.caretList = function(models, df, outcome_var, problem_ty
     	, type=type
     	, report=report
 	 	, summary_fun=summary_fun
+		, save_model=save_model
+		, model_id=model_id
+		, model_folder=model_folder
+		, preprocesses=preprocesses
     )
     return(est)
   })
@@ -316,12 +415,12 @@ boot_estimates_multiple.caretList = function(models, df, outcome_var, problem_ty
 #' @export 
 
 
-boot_estimates_multiple.caretEnsemble = function(models, df, outcome_var, problem_type, nreps = 100, model_name=NULL, type="prob", report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary) {
+boot_estimates_multiple.caretEnsemble = function(models, df, outcome_var, problem_type, nreps = 100, model_name=NULL, type="prob", report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary, save_model=FALSE, model_id=paste0(model_name, "-", Sys.time()), model_folder="models", preprocesses=NULL) {
   ens_model = models
   base_models = as.list(models$models)
   base_models$ensemble = ens_model
   base_models$ensemble$method = "ensemble"
-  est = boot_estimates_multiple(base_models, df, outcome_var, problem_type, nreps, model_name, type, report, summary_fun)
+  est = boot_estimates_multiple(base_models, df, outcome_var, problem_type, nreps, model_name, type, report, summary_fun, save_model, model_id, model_folder, preprocesses)
   class(est) = c("Rautomlmetric2", class(est))
   return(est)
 }
