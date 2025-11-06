@@ -2,8 +2,9 @@
 #'
 #' @details Computes SHAP values for a single caret model. In case of cartList or caretEnsemble, call the specific model from the list.
 #'
-#' @importFrom fastshap explain 
 #' @importFrom shapviz sv_importance sv_waterfall sv_waterfall shapviz
+
+## @importFrom fastshap explain 
 
 compute_shap_single = function(model, newdata, response, task, positive_class=2, model_name="model", nsim = 50, max_n=1000) {
   

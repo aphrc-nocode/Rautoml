@@ -10,9 +10,9 @@
 #' @param colorbrewer A string specifying the ColorBrewer palette to use (default is "Dark2").
 #'
 #' @return A ggplot2 object with the bivariate plots. Returns an empty plot if outcome or features are not provided.
-#' @import ggplot2
-#' @import GGally
-#' @import RColorBrewer
+#' @importFrom ggplot2 theme element_text scale_color_manual scale_fill_manual 
+#' @importFrom GGally ggbivariate
+#' @importFrom RColorBrewer brewer.pal
 #' @export 
 #'
 #' @examples
@@ -49,10 +49,3 @@ bivariate_plot <- function(df, outcome = NULL, features = NULL,
 }
 
 
-#mtcars1 <- mtcars
-#mtcars1$gear <- as.factor(mtcars1$gear)
-#mtcars1$am <- as.factor(mtcars1$am)
-#test <- bivariate_plot(df = mtcars1, outcome = "am", features = names(mtcars1)[names(mtcars1)!="am"])
-#ggbivariate(mtcars1, outcome = "am", explanatory = names(mtcars1)[names(mtcars1)!="am"], title = "")
-# 
-#bivariate_plot(df = mtcars1, outcome = "am", features = names(mtcars1)[names(mtcars1)!="am"], colorbrewer = "Accent")
