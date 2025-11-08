@@ -102,6 +102,9 @@ preprocess_new_data = function(recipes, new_data) {
 save_model = function(model, name, folder="models", metadata=list()) {
   Rautoml::create_dir(folder)
   board = pins::board_folder(folder)
+  if (inherits(model, c("caretEnsemble", "caretStack"))) {
+     model = model$ens_model
+  }
   v = vetiver::vetiver_model(
     model = model
     , model_name = name # digest::digest(name, algo = "sha256")
@@ -305,6 +308,7 @@ boot_measures = function(model, df, outcome_var, problem_type, type="prob") {
     preds = predict(model, x_df)
     scores_df = data.frame(as.list(caret::postResample(pred = preds, obs = y)))
     roc_df = data.frame(x=y, y=preds, .check_="pred_roc")
+	 colnames(roc_df) = c("x", "y", ".check_")
     base_lev = NULL
   }
 
