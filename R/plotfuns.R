@@ -1,6 +1,6 @@
 #' Visualize predictions
 #'
-#'
+#' @import ggplot2 dplyr
 #' @export
 #'
 viz_pred = function(df) {
