@@ -26,42 +26,42 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 			preprocess_result$impute_methods = "Deleted missing values"
 		} else if (impute_methods== "missing_mean") {
 			df_out = (df_out
-				%>% recipes::step_unknown(recipes::all_nominal(), new_level = "_Missing_")
-				%>% recipes::step_impute_mean(recipes::all_numeric())
+				%>% recipes::step_unknown(recipes::all_nominal(), new_level = "_Missing_", skip=TRUE)
+				%>% recipes::step_impute_mean(recipes::all_numeric(), skip=TRUE)
 			)
 			preprocess_result$impute_methods = c("missing values in categorical variables recorded as _Missing_", "missing values in numeric variables replaced by the mean.")
 		} else if (impute_methods=="missing_median") {
 			df_out = (df_out
-				%>% recipes::step_unknown(recipes::all_nominal(), new_level = "_Missing_")
-				%>% recipes::step_impute_median(recipes::all_numeric())
+				%>% recipes::step_unknown(recipes::all_nominal(), new_level = "_Missing_", skip=TRUE)
+				%>% recipes::step_impute_median(recipes::all_numeric(), skip=TRUE)
 			)
 			preprocess_result$impute_methods = c("missing values in categorical variables recorded as _Missing_", "missing values in numeric variables replaced by the median.")
 		} else if (impute_methods=="mode_median") {
 			df_out = (df_out
-				%>% recipes::step_impute_mode(recipes::all_nominal())
-				%>% recipes::step_impute_median(recipes::all_numeric())
+				%>% recipes::step_impute_mode(recipes::all_nominal(), skip=TRUE)
+				%>% recipes::step_impute_median(recipes::all_numeric(), skip=TRUE)
 			)
 			preprocess_result$impute_methods = c("missing values in categorical variables replacesd by modal value", "missing values in numeric variables replaced by the median.")
 		} else if (impute_methods=="mode_mean") {
 			df_out = (df_out
-				%>% recipes::step_impute_mode(recipes::all_nominal())
-				%>% recipes::step_impute_mean(recipes::all_numeric())
+				%>% recipes::step_impute_mode(recipes::all_nominal(), skip=TRUE)
+				%>% recipes::step_impute_mean(recipes::all_numeric(), skip=TRUE)
 			)
 			preprocess_result$impute_methods = c("missing values in categorical variables replacesd by modal value", "missing values in numeric variables replaced by the mean.")
 		} else if (impute_methods=="bag") {
 			df_out = (df_out
-				%>% recipes::step_impute_bag(recipes::all_predictors(), recipes::all_outcomes())
+				%>% recipes::step_impute_bag(recipes::all_predictors(), recipes::all_outcomes(), skip=TRUE)
 			)
 			preprocess_result$impute_methods = c("missing values imputed using Bagging")
 		} else if (impute_methods=="knn") {
 			df_out = (df_out
-				%>% recipes::step_impute_knn(recipes::all_predictors(), recipes::all_outcomes())
+				%>% recipes::step_impute_knn(recipes::all_predictors(), recipes::all_outcomes(), skip=TRUE)
 			)
 			preprocess_result$impute_methods = c("missing values imputed using KNN.")
 		} else if (impute_methods=="knn_linear") {
 			df_out = (df_out
-				%>% recipes::step_impute_knn(recipes::all_nominal())
-				%>% recipes::step_impute_linear(recipes::all_numeric())
+				%>% recipes::step_impute_knn(recipes::all_nominal(), skip=TRUE)
+				%>% recipes::step_impute_linear(recipes::all_numeric(), skip=TRUE)
 			)
 			preprocess_result$impute_methods = c("missing values in categorical variables replacesd by KNN", "missing values in numeric variables replaced by linear reg/ression.")
 		}
@@ -110,15 +110,17 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 		}
 	}
 	
+
 	if (isTRUE(!is.null(outcome_var)) & isTRUE(outcome_var!="")) {
 		if (isTRUE(!is.null(task)) & isTRUE(task=="Classification")) {
 			df_out = (df_out
 				|> recipes::step_mutate_at(outcome_var, fn=function(x){
 					x = forcats::fct_relabel(x, make.names)
 					return(x)
-				})
+				}, skip=TRUE)
 			)
 		}
+		
 		if (isTRUE(up_sample)) {
 			up_sample_type = match.arg(up_sample_type)
 			switch(up_sample_type
@@ -159,12 +161,11 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 		%>% recipes::bake(new_data=NULL)
 	)
 
+	## FIXME: Updating skipped processes. If using new data with outcome, this has to updated
 	if (!is.null(df_test)) {
-		df_test = (prepped_recipe
-			%>% recipes::bake(new_data=df_test)
-		)
+		df_test = preprocess_new_data(recipes=prepped_recipe, new_data=df_test, update_skip=TRUE)
 	}
-	
+
 	outcome_nlevels = NULL
 	if (isTRUE(!is.null(outcome_var)) & isTRUE(outcome_var!="")) {
 		if (isTRUE(!is.null(task)) & isTRUE(task=="Classification")) {

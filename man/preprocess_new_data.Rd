@@ -4,7 +4,7 @@
 \alias{preprocess_new_data}
 \title{Preprocess new data}
 \usage{
-preprocess_new_data(recipes, new_data)
+preprocess_new_data(recipes, new_data, update_skip = FALSE)
 }
 \arguments{
 \item{recipes}{preprocessed recipes object}

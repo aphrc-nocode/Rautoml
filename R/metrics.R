@@ -33,9 +33,12 @@ create_pred_prototype = function(df, outcome_var=NULL) {
 #'
 #' @export
 
-predict_endpoint = function(url, new_data, recipes=NULL, model_name=model) {
+predict_endpoint = function(url, new_data, recipes=NULL, model_name=model, update_skip=FALSE) {
+  temp_df = new_data
   if (!is.null(recipes)) {
-    new_data = preprocess_new_data(recipes, new_data)
+    new_data = preprocess_new_data(recipes, new_data, update_skip=update_skip)
+  } else {
+  	new_data = temp_df
   }
   x = lapply(1:length(url), function(i) {
   	  u = url[i]
@@ -44,7 +47,7 @@ predict_endpoint = function(url, new_data, recipes=NULL, model_name=model) {
 	  }
 	  endpoint = vetiver::vetiver_endpoint(u)
 	  pred = predict(endpoint, new_data)
-	  pred = cbind.data.frame(pred, new_data)
+	  pred = cbind.data.frame(pred, temp_df)
 	  pred[["model_name"]] = model_name[i]
 	  pred = pred[, union(c("model_name", "value"), colnames(pred))]
 	  return(pred)
@@ -81,7 +84,12 @@ get_endpoint_data = function(url, endpoint=c("ping", "metadata", "prototype")) {
 #'
 #' @export 
 
-preprocess_new_data = function(recipes, new_data) {
+preprocess_new_data = function(recipes, new_data, update_skip=FALSE) {
+	if (update_skip) {
+		for (i in 1:length(recipes$steps)) {
+			recipes$steps[[i]]$skip = FALSE
+		}
+	}
   df = (recipes
     |> recipes::bake(new_data = new_data)
   )

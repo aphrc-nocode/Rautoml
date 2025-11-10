@@ -4,7 +4,13 @@
 \alias{predict_endpoint}
 \title{Use endpoint to predict}
 \usage{
-predict_endpoint(url, new_data, recipes = NULL, model_name = model)
+predict_endpoint(
+  url,
+  new_data,
+  recipes = NULL,
+  model_name = model,
+  update_skip = FALSE
+)
 }
 \description{
 Use endpoint to predict

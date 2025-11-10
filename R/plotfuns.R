@@ -14,7 +14,7 @@ metric_theme = function(){
 		, axis.title.x = element_text(size = 12)
 		, axis.title.y = element_text(size = 12)
 		, legend.title = element_text(size = 12, hjust = 0.5)
-		, legend.text = element_text(12)
+		, legend.text = element_text(size=12)
 		, panel.grid.major = element_blank()
 		, legend.key.size = unit(0.8, "cm")
 		, legend.key = element_rect(fill = "white")
@@ -53,7 +53,7 @@ viz_pred = function(df) {
 	} else {
 		p = (ggplot2::ggplot(df, aes(x = model_name, fill = value))
 			+ ggplot2::geom_bar(position = "dodge", alpha = 0.8, color = "black")
-			+ ggplot2::labs(x = "Model", y = "Predicted categroy")
+			+ ggplot2::labs(x = "Model", y = "Count")
 			+ ggplot2::theme(legend.position = "bottom")
 		)
 	}
