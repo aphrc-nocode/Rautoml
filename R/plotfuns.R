@@ -1,3 +1,42 @@
+
+#' GGplot Theme for metrics
+#' 
+#' @import ggplot2
+
+metric_theme = function(){
+ theme_bw() +
+    theme(panel.spacing=grid::unit(0,"lines")
+    	, plot.title = element_text(hjust = 0.5)
+		, legend.position = "bottom"
+		, axis.ticks.y = element_blank()
+		, axis.text.x = element_text(size = 12)
+		, axis.text.y = element_text(size = 12)
+		, axis.title.x = element_text(size = 12)
+		, axis.title.y = element_text(size = 12)
+		, legend.title = element_text(size = 12, hjust = 0.5)
+		, legend.text = element_text(12)
+		, panel.grid.major = element_blank()
+		, legend.key.size = unit(0.8, "cm")
+		, legend.key = element_rect(fill = "white")
+		, panel.spacing.y = unit(0.3, "lines")
+		, panel.spacing.x = unit(1, "lines")
+		, strip.background = element_blank()
+		, strip.text.x = element_text(size = 11
+			, colour = "black"
+			, face = "bold"
+		)
+  )
+}
+
+#' Round off estimates 
+
+nice_round = function(x, y, z) {
+  s = paste0(round(x, 3), "[", round(y, 3), ", ", round(z, 3), "]")
+  return(s)
+}
+
+
+
 #' Visualize predictions
 #'
 #' @import ggplot2 dplyr
@@ -6,20 +45,20 @@
 viz_pred = function(df) {
 	x = get_type(df$value)
 	if (x == "numeric") {
-		p = (ggplot(df, aes(x = model_name, y = value, fill = model_name))
-			+ geom_boxplot(alpha = 0.5)
-			+ labs(x = "Model", y = "Predicted value")
-			+ guides(fill = "none")
+		p = (ggplot2::ggplot(df, aes(x = model_name, y = value, fill = model_name))
+			+ ggplot2::geom_boxplot(alpha = 0.5)
+			+ ggplot2::labs(x = "Model", y = "Predicted value")
+			+ ggplot2::guides(fill = "none")
 		)
 	} else {
-		p = (ggplot(df, aes(x = model_name, fill = value))
-			+ geom_bar(position = "dodge", alpha = 0.8, color = "black")
-			+ labs(x = "Model", y = "Predicted categroy")
-			+ theme(legend.position = "bottom")
+		p = (ggplot2::ggplot(df, aes(x = model_name, fill = value))
+			+ ggplot2::geom_bar(position = "dodge", alpha = 0.8, color = "black")
+			+ ggplot2::labs(x = "Model", y = "Predicted categroy")
+			+ ggplot2::theme(legend.position = "bottom")
 		)
 	}
 	p = (p
-		+ theme_minimal(base_size = 14)
+		+ ggplot2::theme_minimal(base_size = 14)
 	)
 	return(p)
 }
@@ -28,6 +67,9 @@ viz_pred = function(df) {
 #' Variable importance plot for compute_shap object
 #'
 #' @param x compute_shap object
+#'
+#' @import ggplot2
+#'
 
 plot_varimp = function(x, ..., pos = 0.5, drop_zero = TRUE, top_n=NULL){
 
@@ -74,6 +116,8 @@ plot_varimp = function(x, ..., pos = 0.5, drop_zero = TRUE, top_n=NULL){
 #' Variable dependency plot for compute_shap object
 #'
 #' @param x compute_shap object
+#'
+#' @import ggplot2
 
 plot_vardep = function(x) {
   nmods <- unique(x$model)
@@ -105,6 +149,8 @@ plot_vardep = function(x) {
 #' Most frequently selected important variables plot for compute_shap object
 #'
 #' @param x compute_shap object
+#'
+#' @import ggplot2
 
 plot_varfreq = function(x) {
   p = (ggplot(x, aes(x=pos, y=fct_reorder(new_terms, -pos, .fun=mean), fill=n))
@@ -146,6 +192,8 @@ plot_varfreq = function(x) {
 #' @param vv compute_shap object with named models
 #' @param type various sv objets, either "sv_bw",  "sv_wf" or "sv_f"
 #'
+#' @import ggplot2
+#'
 
 combine_shap_plots = function(vv, type) {
   plots = Map(function(m, name) {
@@ -164,6 +212,8 @@ combine_shap_plots = function(vv, type) {
 #' Plot variable importance, most frequently identfied variables, dependency plots, and the SHAP values plots
 #'
 #' @param x compute_shap object
+#'
+#' @import ggplot2
 #'
 #' @export
 
@@ -196,6 +246,8 @@ plot.Rautomlshap = function(x, pos = 0.5, drop_zero = TRUE, top_n=NULL, ...) {
 #' @param var variable of interest.
 #'
 #' @return a ggplot object.
+#'
+#' @import ggplot2
 #'
 #' @export
 #'
@@ -271,6 +323,10 @@ ggunivariate = function(df, vartype, max_nlevels=30) {
 	return(p1)
 }
 
+#' Base these for Rautoml
+#'
+#' @import ggplot2
+#'
 
 base_theme <- function() {
   theme_minimal(base_size = 12) +
@@ -300,6 +356,8 @@ base_theme <- function() {
 #'
 #' @importFrom naniar gg_miss_var
 #'
+#' @import ggplot2
+#'
 #' @export
 #'
 
@@ -314,6 +372,8 @@ missing_data_plot = function(df, ...) {
 #' Plot metrics from model training
 #'
 #' @param metric
+#'
+#' @import ggplot2
 #'
 #' @export
 
@@ -342,6 +402,8 @@ plot.Rautomlmetric = function(metric) {
 #'
 #' @param est 
 #'
+#' @import ggplot2
+#'
 #' @export
 #'
 
@@ -366,6 +428,8 @@ roc_plot = (ggplot(est, aes(x = x, y = y, group = model, colour = reorder(model,
 #' Plot metrics from model test
 #'
 #' @param est
+#'
+#' @import ggplot2
 #'
 #' @export
 #'
@@ -419,39 +483,4 @@ plot.Rautomlmetric2 = function(est) {
 	return(list(specifics=specifics_plot, all=all_plot, roc=roc_plot))
 }
 
-
-#' GGplot Theme for metrics
-#'
-
-metric_theme = function(){
- theme_bw() +
-    theme(panel.spacing=grid::unit(0,"lines")
-    	, plot.title = element_text(hjust = 0.5)
-		, legend.position = "bottom"
-		, axis.ticks.y = element_blank()
-		, axis.text.x = element_text(size = 12)
-		, axis.text.y = element_text(size = 12)
-		, axis.title.x = element_text(size = 12)
-		, axis.title.y = element_text(size = 12)
-		, legend.title = element_text(size = 12, hjust = 0.5)
-		, legend.text = element_text(12)
-		, panel.grid.major = element_blank()
-		, legend.key.size = unit(0.8, "cm")
-		, legend.key = element_rect(fill = "white")
-		, panel.spacing.y = unit(0.3, "lines")
-		, panel.spacing.x = unit(1, "lines")
-		, strip.background = element_blank()
-		, strip.text.x = element_text(size = 11
-			, colour = "black"
-			, face = "bold"
-		)
-  )
-}
-
-#' Round off estimates 
-
-nice_round = function(x, y, z) {
-  s = paste0(round(x, 3), "[", round(y, 3), ", ", round(z, 3), "]")
-  return(s)
-}
 
