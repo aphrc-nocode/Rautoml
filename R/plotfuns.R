@@ -265,7 +265,7 @@ ggunivariate = function(df, vartype, max_nlevels=30) {
 			|> ungroup()
 			|> mutate(prop = .nxx/sum(.nxx))
 			|> arrange(desc(prop))
-			|> mutate(pos = n():1, .gg=GREEN3)
+			|> mutate(pos = n():1, .gg="#31859C")
 		)
 		
 		n_levels = length(unique(df |> pull(.x_var)))
