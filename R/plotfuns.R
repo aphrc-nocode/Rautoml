@@ -196,18 +196,57 @@ plot_varfreq = function(x) {
 #'
 
 combine_shap_plots = function(vv, type) {
-  plots = Map(function(m, name) {
-    if (!is.null(m[[type]])) {
-      m[[type]] + theme_bw() + ggtitle(name)
-    } else {
-      NULL
+  find_type <- function(x, name_path = "") {
+    plots <- list()
+    if (is.list(x)) {
+      # If this level contains the target element, capture it
+      if (!is.null(x[[type]])) {
+        plots[[name_path]] <- x[[type]]
+      }
+      # Recurse into sublists
+      for (n in names(x)) {
+        sub_name <- if (name_path == "") n else paste(name_path, n, sep = "$")
+        plots <- c(plots, find_type(x[[n]], sub_name))
+      }
     }
-  }, vv, names(vv))
-  
-  plots = plots[!sapply(plots, is.null)]
-  plots = patchwork::wrap_plots(plots) + patchwork::plot_layout(guides = "collect", axis_titles = "collect")
-  return(plots)
+    return(plots)
+  }
+
+  all_plots <- find_type(vv)
+
+  if ("" %in% names(all_plots)) names(all_plots)[names(all_plots) == ""] <- "root"
+
+  plots <- Map(function(p, nm) {
+    if (inherits(p, "gg")) {
+      p + theme_bw() + ggtitle(nm)
+    } else NULL
+  }, all_plots, names(all_plots))
+
+  plots <- plots[!sapply(plots, is.null)]
+
+  if (length(plots) > 0) {
+    patchwork::wrap_plots(plots) +
+      patchwork::plot_layout(guides = "collect", axis_titles = "collect")
+  } else {
+    message("No plots found for type = ", type)
+    NULL
+  }
 }
+
+
+## combine_shap_plots = function(vv, type) {
+##   plots = Map(function(m, name) {
+##     if (!is.null(m[[type]])) {
+##       m[[type]] + theme_bw() + ggtitle(name)
+##     } else {
+##       NULL
+##     }
+##   }, vv, names(vv))
+##   
+##   plots = plots[!sapply(plots, is.null)]
+##   plots = patchwork::wrap_plots(plots) + patchwork::plot_layout(guides = "collect", axis_titles = "collect")
+##   return(plots)
+## }
 
 #' Plot variable importance, most frequently identfied variables, dependency plots, and the SHAP values plots
 #'
