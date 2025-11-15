@@ -16,7 +16,9 @@
 preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_methods = c("omit", "missing_mean", "missing_median", "mode_median", "mode_mean", "knn", "knn_linear", "bag"), perform_fe=TRUE, perform_pca=FALSE, up_sample=FALSE, up_sample_type=c("random", "smote", "bsmote", "adasyn", "rose"), df_test=NULL, task=NULL, exclude=NULL) {
 	df_out = recipes::recipe(formula=model_form, data=df)
 	preprocess_result = list()
-
+	df_out = (df_out
+		|> recipes::step_rm(where(~all(is.na(.x))))
+	)
 	if (anyNA.data.frame(df) & isTRUE(impute)) {
 		impute_methods = match.arg(impute_methods)
 		if (impute_methods == "omit") {
@@ -26,24 +28,28 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 			preprocess_result$impute_methods = "Deleted missing values"
 		} else if (impute_methods== "missing_mean") {
 			df_out = (df_out
-				%>% recipes::step_unknown(recipes::all_nominal(), new_level = "_Missing_", skip=TRUE)
+				%>% recipes::step_novel(recipes::all_nominal(), skip=TRUE)
+				%>% recipes::step_unknown(recipes::all_nominal(), new_level = "Missing_category", skip=TRUE)
 				%>% recipes::step_impute_mean(recipes::all_numeric(), skip=TRUE)
 			)
-			preprocess_result$impute_methods = c("missing values in categorical variables recorded as _Missing_", "missing values in numeric variables replaced by the mean.")
+			preprocess_result$impute_methods = c("missing values in categorical variables recorded as Missing_category", "missing values in numeric variables replaced by the mean.")
 		} else if (impute_methods=="missing_median") {
 			df_out = (df_out
-				%>% recipes::step_unknown(recipes::all_nominal(), new_level = "_Missing_", skip=TRUE)
+				%>% recipes::step_novel(recipes::all_nominal(), skip=TRUE)
+				%>% recipes::step_unknown(recipes::all_nominal(), new_level = "Missing_category", skip=TRUE)
 				%>% recipes::step_impute_median(recipes::all_numeric(), skip=TRUE)
 			)
-			preprocess_result$impute_methods = c("missing values in categorical variables recorded as _Missing_", "missing values in numeric variables replaced by the median.")
+			preprocess_result$impute_methods = c("missing values in categorical variables recorded as Missing_category", "missing values in numeric variables replaced by the median.")
 		} else if (impute_methods=="mode_median") {
 			df_out = (df_out
+				%>% recipes::step_novel(recipes::all_nominal(), skip=TRUE)
 				%>% recipes::step_impute_mode(recipes::all_nominal(), skip=TRUE)
 				%>% recipes::step_impute_median(recipes::all_numeric(), skip=TRUE)
 			)
 			preprocess_result$impute_methods = c("missing values in categorical variables replacesd by modal value", "missing values in numeric variables replaced by the median.")
 		} else if (impute_methods=="mode_mean") {
 			df_out = (df_out
+				%>% recipes::step_novel(recipes::all_nominal(), skip=TRUE)
 				%>% recipes::step_impute_mode(recipes::all_nominal(), skip=TRUE)
 				%>% recipes::step_impute_mean(recipes::all_numeric(), skip=TRUE)
 			)
@@ -66,7 +72,11 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 			preprocess_result$impute_methods = c("missing values in categorical variables replacesd by KNN", "missing values in numeric variables replaced by linear reg/ression.")
 		}
 	}
-	
+
+	df_out = (df_out
+		|> step_mutate(across(where(is.factor), forcats::fct_drop), skip=TRUE)
+	)
+
 	if (perform_fe) {
 		df_out = (df_out
 			%>% recipes::step_center(recipes::all_numeric_predictors())
@@ -76,14 +86,23 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 			df_out = (df_out
 				%>% recipes::step_nzv(recipes::all_predictors())
 			)
+			df_out = (df_out
+				%>% recipes::step_dummy(recipes::all_nominal_predictors())
+			)
+			df_out = (df_out
+				%>% recipes::step_nzv(recipes::all_predictors())
+			)
 		} else {
 			df_out = (df_out
 				%>% recipes::step_nzv(recipes::all_predictors(), -recipes::all_of(exclude))
 			)
+			df_out = (df_out
+				%>% recipes::step_dummy(recipes::all_nominal_predictors(), -recipes::all_of(exclude))
+			)
+			df_out = (df_out
+				%>% recipes::step_nzv(recipes::all_predictors(), -recipes::all_of(exclude))
+			)
 		}
-		df_out = (df_out
-			%>% recipes::step_dummy(recipes::all_nominal_predictors())
-		)
 	}
 	
 	if (corr > 0) {
@@ -123,32 +142,13 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 		
 		if (isTRUE(up_sample)) {
 			up_sample_type = match.arg(up_sample_type)
-			switch(up_sample_type
-				, "random" = {
-					df_out = (df_out
-						|> themis::step_upsample(dplyr::one_of(outcome_var), over_ratio=0.5)
-					)
-				}
-				, "smote" = {
-					df_out = (df_out
-						|> themis::step_smote(dplyr::one_of(outcome_var), over_ratio=0.5)
-					)
-				}
-				, "bsmote" = {
-					df_out = (df_out
-						|> themis::step_bsmote(dplyr::one_of(outcome_var), over_ratio=0.5)
-					)
-				}
-				, "adasyn" = {
-					df_out = (df_out
-						|> themis::step_adasyn(dplyr::one_of(outcome_var), over_ratio=0.5)
-					)
-				}
-				, "rose" = {
-					df_out = (df_out
-						|> themis::step_rose(dplyr::one_of(outcome_var), over_ratio=0.5)
-					)
-				}
+			df_out = switch(
+			  up_sample_type,
+			  random = themis::step_upsample(df_out, dplyr::one_of(outcome_var), over_ratio = 0.5, skip=TRUE),
+			  smote  = themis::step_smote(df_out,   dplyr::one_of(outcome_var), over_ratio = 0.5, skip=TRUE),
+			  bsmote = themis::step_bsmote(df_out,  dplyr::one_of(outcome_var), over_ratio = 0.5, skip=TRUE),
+			  adasyn = themis::step_adasyn(df_out,  dplyr::one_of(outcome_var), over_ratio = 0.5, skip=TRUE),
+			  rose   = themis::step_rose(df_out,    dplyr::one_of(outcome_var), over_ratio = 0.5, skip=TRUE)
 			)
 		}
 	}
@@ -164,6 +164,7 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 	## FIXME: Updating skipped processes. If using new data with outcome, this has to updated
 	if (!is.null(df_test)) {
 		df_test = preprocess_new_data(recipes=prepped_recipe, new_data=df_test, update_skip=TRUE)
+		df_test = na.omit(df_test)
 	}
 
 	outcome_nlevels = NULL

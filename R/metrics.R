@@ -345,44 +345,53 @@ boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, typ
 		stop(c("The report options are ", paste0(all, collapse=", ")))
 	}
 	resamples = createResample(1:nrow(df), times = nreps, list = TRUE)
-	est = lapply(resamples, function(x){
-		boot_measures(model=model, df=df[x, ], outcome_var=outcome_var, problem_type=problem_type, type = type)$scores_df
+	est = tryCatch({
+		lapply(resamples, function(x){
+			boot_measures(model=model, df=df[x, ], outcome_var=outcome_var, problem_type=problem_type, type = type)$scores_df
+		})
+	}, error=function(e){
+		return(NULL)
 	})
-	out = do.call(rbind, est)
-	out = sapply(out, summary_fun, simplify=FALSE)
-	out = do.call("rbind", out)
-	out = as.data.frame(out)
-	out$metric = rownames(out)
-	out$model = model_name
-	model_id = digest::digest(model_id, algo = "xxhash32")
-	out$model_id = model_id
-	mm_name = c("model_id", "model", "metric")
-	if (save_model) {
-		dd = preprocesses$original_df
-		metadata = list(
-			template = dd |> head() |> dplyr::select(-dplyr::all_of(outcome_var))
-			, prototype = create_pred_prototype(df=dd, outcome_var=outcome_var)
-			, recipes = model_id
-		)
-		save_recipes(preprocesses$recipes, name=model_id, folder="recipes")
-		save_model(model=model, name=model_id, folder=model_folder, metadata=metadata)
+	if (!is.null(est)) {
+		out = do.call(rbind, est)
+		out = sapply(out, summary_fun, simplify=FALSE)
+		out = do.call("rbind", out)
+		out = as.data.frame(out)
+		out$metric = rownames(out)
+		out$model = model_name
+		model_id = digest::digest(model_id, algo = "xxhash32")
+		out$model_id = model_id
+		mm_name = c("model_id", "model", "metric")
+		if (save_model) {
+			dd = preprocesses$original_df
+			metadata = list(
+				template = dd |> head() |> dplyr::select(-dplyr::all_of(outcome_var))
+				, prototype = create_pred_prototype(df=dd, outcome_var=outcome_var)
+				, recipes = model_id
+			)
+			save_recipes(preprocesses$recipes, name=model_id, folder="recipes")
+			save_model(model=model, name=model_id, folder=model_folder, metadata=metadata)
+		}
+		out_metric = out[out$metric==report,]
+		out_metric = out_metric[, union(mm_name, colnames(out_metric))]
+		out = out[, union(mm_name, colnames(out))]
+		out = list(out_metric, out)
+		names(out) = c("specifics", "all")
+		## Generate ROC
+		roc = boot_measures(model, df, outcome_var, problem_type)
+		roc_df = roc$roc_df
+		if (NROW(roc_df)) {
+		  roc_df$model_id = model_id
+		  roc_df$model = model_name
+		  roc_df = roc_df[, union(c("model_id", "model"), colnames(roc_df))]
+		}
+		out$roc_df = roc_df
+		positive_cat = roc$positive_cat
+		out$positive_cat = positive_cat
+	} else {
+		out = list("specifics" = data.frame(), all=data.frame(), roc_df=data.frame(), positive_cat=NULL)	
 	}
-	out_metric = out[out$metric==report,]
-	out_metric = out_metric[, union(mm_name, colnames(out_metric))]
-	out = out[, union(mm_name, colnames(out))]
-	out = list(out_metric, out)
-	names(out) = c("specifics", "all")
-	## Generate ROC
-	roc = boot_measures(model, df, outcome_var, problem_type)
-	roc_df = roc$roc_df
-	if (NROW(roc_df)) {
-	  roc_df$model_id = model_id
-	  roc_df$model = model_name
-	  roc_df = roc_df[, union(c("model_id", "model"), colnames(roc_df))]
-	}
-	out$roc_df = roc_df
-	positive_cat = roc$positive_cat
-	out$positive_cat = positive_cat
+
 	return(out)
 }
 
@@ -443,41 +452,51 @@ boot_estimates_multiple.caretEnsemble = function(models, df, outcome_var, proble
 #'
 
 get_post_metrics = function(model, outcome, df=NULL, task=NULL) {
-  preds = predict(model, newdata=df)
-  
-  if (isTRUE(task=="Classification")) {
-	  if (inherits(model, "caretEnsemble")) {
-		 preds = as.factor(colnames(preds)[max.col(preds, ties.method = "first")])
+  preds = tryCatch({
+  		predict(model, newdata=df)
+  }, error=function(e) {
+     return(NULL)
+  })
+
+  if (!is.null(preds)) {
+	  if (isTRUE(task=="Classification")) {
+		  if (inherits(model, "caretEnsemble")) {
+			 preds = as.factor(colnames(preds)[max.col(preds, ties.method = "first")])
+		  }
+		  
+		  ## Confussion matrix
+		  cm = caret::confusionMatrix(preds, df[[outcome]])
+		  cm = as.data.frame(cm$table)
+		  colnames(cm) = c("Prediction", "Target", "N")
+		  cm_plot = cvms::plot_confusion_matrix(cm)
+	  } else if (isTRUE(task=="Regression")) {
+			preds = as.numeric(unlist(preds))
+			actuals = df[[outcome]]
+			cm_plot = (ggplot2::ggplot(data.frame(actual=df[[outcome]], pred=preds), aes(x=actual, y=pred))
+				+ ggplot2::geom_point(alpha=0.6) 
+				+ geom_smooth(method = lm, color="green", se = TRUE)
+				+ ggplot2::geom_abline(slope=1, intercept=0, color="red") 
+				+ ggplot2::labs(title="Predicted vs Actual", x="Actual", y="Predicted")
+				+ theme_minimal(base_size = 12)
+			)
 	  }
 	  
-	  ## Confussion matrix
-	  cm = caret::confusionMatrix(preds, df[[outcome]])
-	  cm = as.data.frame(cm$table)
-	  colnames(cm) = c("Prediction", "Target", "N")
-	  cm_plot = cvms::plot_confusion_matrix(cm)
-  } else if (isTRUE(task=="Regression")) {
-		preds = as.numeric(unlist(preds))
-		actuals = df[[outcome]]
-		cm_plot = (ggplot2::ggplot(data.frame(actual=df[[outcome]], pred=preds), aes(x=actual, y=pred))
-			+ ggplot2::geom_point(alpha=0.6) 
-      	+ geom_smooth(method = lm, color="green", se = TRUE)
-			+ ggplot2::geom_abline(slope=1, intercept=0, color="red") 
-			+ ggplot2::labs(title="Predicted vs Actual", x="Actual", y="Predicted")
-			+ theme_minimal(base_size = 12)
-		)
-  }
-  
-  if (!inherits(model, "caretEnsemble")) {
-    ## Overall variable importance
-    var_imp = try(caret::varImp(model), silent = TRUE)
-    if (inherits(var_imp, "try-error")) {
-      var_imp_plot = NULL
-    } else {
-      var_imp_plot = plot(var_imp)
-    }
+	  if (!inherits(model, "caretEnsemble")) {
+		 ## Overall variable importance
+		 var_imp = try(caret::varImp(model), silent = TRUE)
+		 if (inherits(var_imp, "try-error")) {
+			var_imp_plot = NULL
+		 } else {
+			var_imp_plot = plot(var_imp)
+		 }
+	  } else {
+		 var_imp_plot = NULL
+	  }
   } else {
-    var_imp_plot = NULL
+     cm_plot = NULL
+	  var_imp_plot = NULL
   }
+
   return(list(cm_plot=cm_plot, var_imp_plot=var_imp_plot))
 }
 

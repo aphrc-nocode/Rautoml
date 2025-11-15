@@ -63,123 +63,137 @@ compute_shap_single = function(model, newdata, response, task, positive_class=2,
   pred_wrapper = function(object, newdata) {
     return(predict(object, newdata = newdata))
   }
-  
-  if (isTRUE(task=="Regression")) {
-  	 if (inherits(model, "caretEnsemble")) {
-		 pred_wrapper = function(object, newdata) {
-			return(predict(object, newdata = newdata)$pred)
+
+  ## FIXME: Check model within the loop
+  check_pred = tryCatch({
+     predict(model, newdata=shap_data)
+  }, error=function(e){
+     return(NULL)
+  })
+
+  if (is.null(check_pred)) {
+    sv=NULL
+	 sv_viz=NULL
+	 sv_dp=NULL
+	 sv_all=NULL
+  } else {
+	  if (isTRUE(task=="Regression")) {
+		 if (inherits(model, "caretEnsemble")) {
+			 pred_wrapper = function(object, newdata) {
+				return(predict(object, newdata = newdata)$pred)
+			 }
 		 }
-	 }
-    x = fastshap::explain(
-      model,
-      X = shap_data,
-      pred_wrapper = pred_wrapper,
-      nsim = nsim
-    )
-    x = clean_sv(x, shap_data = shap_data)
-    sv = x$sv
-    sv$Class = "class"
-    sv_all = x$sv_all
-    sv_dp = x$sv_dp
-    sv_dp$Class = "class"
-  } else if (isTRUE(task=="Classification")) {
-    if (inherits(model, "caretEnsemble")) {
-      pred_wrapper = function(object, newdata) {
-        p = predict(object, newdata = newdata)
-        p = as.data.frame(p)
-        p = p[, cls]
-        return(p)
-      }
-      # levs = model$ens_model$levels
-    } else {
-      pred_wrapper = function(object, newdata) {
-        p = predict(object, newdata = newdata, type = "prob")[, cls]
-        return(p)
-      }
-      # levs = model$levels
-    }
-    levs = model$levels
-    if (length(levs) > 2) {
-      sv = list()
-      sv_all = list()
-      sv_test_df = list()
-      for (cls in levs) {
-        x = fastshap::explain(
-          model,
-          X = shap_data,
-          pred_wrapper = pred_wrapper,
-          nsim = nsim
-        )
-        sv_viz = shapviz::shapviz(x, X=shap_data)
-        sv_all[[cls]] = get_all_sv(sv_viz)
-        x = as.data.frame(x)
-        x["outcomexx__..xx"] = cls
-        sv[[cls]] = x
-        sv_test = shap_data
-        sv_test["outcomexx__..xx"] = cls
-        sv_test_df[[cls]] = sv_test
-      }
-      sv = do.call("rbind", sv)
-      sv = (sv
-        |> tidyr::pivot_longer(
-          cols = -outcomexx__..xx
-          , names_to = "variable"
-          , values_to = "score"
-        )
-        |> dplyr::rename("Class"="outcomexx__..xx")
-      )
-      
-      ## variable dependence
-      sv_dp_df = (sv
-        |> dplyr::mutate(id=1:dplyr::n())
-      )
-      sv = (sv
-        |> group_by(Class, variable)
-        |> summarise(Rautoml::student_t_summary(abs(score)), .groups = "drop")
-      )
-      
-      ## SHAP values long
-      sv_long = (do.call("rbind", sv_test_df)
-        |> tidyr::pivot_longer(
-          cols = -outcomexx__..xx #dplyr::everything()
-          , names_to = "variable"
-          , values_to = "observed"
-        )
-        |> dplyr::rename("Class"="outcomexx__..xx")
-        |> dplyr::mutate(id=1:dplyr::n())
-      )
-      
-      ## Dependency plots
-      sv_dp = dplyr::left_join(sv_dp_df, sv_long)
-      
-    } else {
-      if (inherits(model, "caretEnsemble")) {
-        pred_wrapper = function(object, newdata) {
-          p = predict(object, newdata = newdata)
-          p = as.data.frame(p)
-          return(p[, positive_class])
-        }
-      } else {
-        pred_wrapper = function(object, newdata) {
-          return(predict(object, newdata = newdata, type = "prob")[, positive_class])
-        }
-      }
-      x = fastshap::explain(
-        model,
-        X = shap_data,
-        pred_wrapper = pred_wrapper,
-        nsim = nsim
-      )
-      x = clean_sv(x, shap_data = shap_data)
-      sv = x$sv
-      sv$Class = "class"
-      sv_all = x$sv_all
-      sv_dp = x$sv_dp
-      sv_dp$Class = "class"
-    }
+		 x = fastshap::explain(
+			model,
+			X = shap_data,
+			pred_wrapper = pred_wrapper,
+			nsim = nsim
+		 )
+		 x = clean_sv(x, shap_data = shap_data)
+		 sv = x$sv
+		 sv$Class = "class"
+		 sv_all = x$sv_all
+		 sv_dp = x$sv_dp
+		 sv_dp$Class = "class"
+	  } else if (isTRUE(task=="Classification")) {
+		 if (inherits(model, "caretEnsemble")) {
+			pred_wrapper = function(object, newdata) {
+			  p = predict(object, newdata = newdata)
+			  p = as.data.frame(p)
+			  p = p[, cls]
+			  return(p)
+			}
+			# levs = model$ens_model$levels
+		 } else {
+			pred_wrapper = function(object, newdata) {
+			  p = predict(object, newdata = newdata, type = "prob")[, cls]
+			  return(p)
+			}
+			# levs = model$levels
+		 }
+		 levs = model$levels
+		 if (length(levs) > 2) {
+			sv = list()
+			sv_all = list()
+			sv_test_df = list()
+			for (cls in levs) {
+			  x = fastshap::explain(
+				 model,
+				 X = shap_data,
+				 pred_wrapper = pred_wrapper,
+				 nsim = nsim
+			  )
+			  sv_viz = shapviz::shapviz(x, X=shap_data)
+			  sv_all[[cls]] = get_all_sv(sv_viz)
+			  x = as.data.frame(x)
+			  x["outcomexx__..xx"] = cls
+			  sv[[cls]] = x
+			  sv_test = shap_data
+			  sv_test["outcomexx__..xx"] = cls
+			  sv_test_df[[cls]] = sv_test
+			}
+			sv = do.call("rbind", sv)
+			sv = (sv
+			  |> tidyr::pivot_longer(
+				 cols = -outcomexx__..xx
+				 , names_to = "variable"
+				 , values_to = "score"
+			  )
+			  |> dplyr::rename("Class"="outcomexx__..xx")
+			)
+			
+			## variable dependence
+			sv_dp_df = (sv
+			  |> dplyr::mutate(id=1:dplyr::n())
+			)
+			sv = (sv
+			  |> group_by(Class, variable)
+			  |> summarise(Rautoml::student_t_summary(abs(score)), .groups = "drop")
+			)
+			
+			## SHAP values long
+			sv_long = (do.call("rbind", sv_test_df)
+			  |> tidyr::pivot_longer(
+				 cols = -outcomexx__..xx #dplyr::everything()
+				 , names_to = "variable"
+				 , values_to = "observed"
+			  )
+			  |> dplyr::rename("Class"="outcomexx__..xx")
+			  |> dplyr::mutate(id=1:dplyr::n())
+			)
+			
+			## Dependency plots
+			sv_dp = dplyr::left_join(sv_dp_df, sv_long)
+			
+		 } else {
+			if (inherits(model, "caretEnsemble")) {
+			  pred_wrapper = function(object, newdata) {
+				 p = predict(object, newdata = newdata)
+				 p = as.data.frame(p)
+				 return(p[, positive_class])
+			  }
+			} else {
+			  pred_wrapper = function(object, newdata) {
+				 return(predict(object, newdata = newdata, type = "prob")[, positive_class])
+			  }
+			}
+			x = fastshap::explain(
+			  model,
+			  X = shap_data,
+			  pred_wrapper = pred_wrapper,
+			  nsim = nsim
+			)
+			x = clean_sv(x, shap_data = shap_data)
+			sv = x$sv
+			sv$Class = "class"
+			sv_all = x$sv_all
+			sv_dp = x$sv_dp
+			sv_dp$Class = "class"
+		 }
+	  }
+	  sv$model = model_name
+	  sv_dp$model = model_name
   }
-  sv$model = model_name
-  sv_dp$model = model_name
   return(list(sv=sv, sv_viz=sv_all, sv_dp=sv_dp))
 }
 
