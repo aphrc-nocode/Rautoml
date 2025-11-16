@@ -250,6 +250,10 @@ compute_shap.caretList = function(models, model_names, newdata, response, task, 
     } else {
       positive_class = NULL
     }
+	 model_name = names(model$method)
+	 if (is.null(model_name)) {
+	 	model_name = model$method
+	 }
     out = compute_shap_single(
       model = model
       , newdata=newdata
@@ -297,6 +301,10 @@ compute_shap.caretEnsemble = function(models, model_names=NULL, newdata, respons
     } else {
       positive_class = NULL
     }
+	 model_name = names(model$method)
+	 if (is.null(model_name)) {
+	 	model_name = model$method
+	 }
     out = compute_shap_single(
       model = model
       , newdata=newdata

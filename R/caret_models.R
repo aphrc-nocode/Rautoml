@@ -30,7 +30,7 @@ stop_cluster = function() {
 setup_caret = function(model, param, param_set=NULL) {
   if (isTRUE(param) & (isTRUE(!is.null(param))) & isTRUE(!is.null(param_set))) {
     model_name = list(
-      model_name = caretEnsemble::caretModelSpec(
+	 caretEnsemble::caretModelSpec(
         method = model
         , tuneGrid = do.call("expand.grid", param_set)
       )
@@ -38,7 +38,7 @@ setup_caret = function(model, param, param_set=NULL) {
   } else {
     model_name = list(caretEnsemble::caretModelSpec(model))
   }
-  names(model_name) = model
+  names(model_name) = names(model)
   return(model_name)
 }
 

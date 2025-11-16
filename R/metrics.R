@@ -154,11 +154,10 @@ get_recipes = function(name, folder="recipes") {
 #' @export
 #'
 
-
 extract_summary.list = function(models, summary_fun = quantile_summary) {
   if (length(models)==1) {
     res = models[[1]]$resample
-    res$model = models[[1]]$method
+    res$model = names(models[[1]]$method)
     res = (res
       |> tidyr::gather(-Resample, -model, key="metric", value = "score")
     )
@@ -167,6 +166,14 @@ extract_summary.list = function(models, summary_fun = quantile_summary) {
       |> tidyr::gather(-Resample, key="metric", value = "score")
       |> tidyr::separate(col=metric, into=c("model", "metric"), sep="~")
     )
+	 model_names = sapply(models, function(x) {
+	 	x = names(x[["method"]])
+		if (is.null(x)) {
+			x = x[["method"]]
+		}
+		return(x)
+	 })
+	 res$model = model_names
   }
   res = (res
     |> group_by(model, metric)
@@ -337,7 +344,10 @@ boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, typ
 	}
 
   if (is.null(model_name)) {
-    model_name = model$method
+    model_name = names(model$method)
+	 if (is.null(model_name)) {
+	 	model_name = model$method
+	 }
 	 model_id = paste0(model_name, "-", Sys.time())
   }
   
@@ -513,6 +523,8 @@ post_model_metrics.caretList = function(models, outcome, df=NULL, task=NULL) {
     out = list(cm_plot=out$cm_plot, var_imp_plot=out$var_imp_plot)
     return(out)
   })
+  names(mets) = names(models)
+  return(mets)
 }
 
 
@@ -524,12 +536,14 @@ post_model_metrics.caretList = function(models, outcome, df=NULL, task=NULL) {
 post_model_metrics.caretEnsemble = function(models, outcome, df=NULL, task=NULL) {
   ensemble = get_post_metrics(model=models, outcome=outcome, df=df, task=task)
   models = models$models
+  old_names = names(models)
   mets = lapply(models, function(model){
     out = get_post_metrics(model=model, outcome=outcome, df=df, task=task)
     out = list(cm_plot=out$cm_plot, var_imp_plot=out$var_imp_plot)
     return(out)
   })
   mets = c(mets, list(ensemble=ensemble))
+  names(mets) = c(old_names, "ensemble")
   return(mets)
 }
 
