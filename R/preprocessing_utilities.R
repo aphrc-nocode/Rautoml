@@ -120,11 +120,11 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 	if (perform_pca) {
 		if (is.null(exclude)) {
 			df_out = (df_out
-				|> recipes::step_pca(recipes::all_numeric_predictors())
+				|> recipes::step_pca(recipes::all_numeric_predictors(), num_comp=10, keep_original_cols=TRUE)
 			)
 		} else {
 			df_out = (df_out
-				|> recipes::step_pca(recipes::all_numeric_predictors(), -recipes::all_of(exclude))
+				|> recipes::step_pca(recipes::all_numeric_predictors(), -recipes::all_of(exclude), num_comp=10, keep_original_cols=TRUE)
 			)
 		}
 	}

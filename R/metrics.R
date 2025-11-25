@@ -275,6 +275,16 @@ boot_measures = function(model, df, outcome_var, problem_type, type="prob") {
 	 	y = as.factor(y)
 	 }
 
+	 if (nlevels(y)==2) {
+		base_lev = levels(y)[2]  
+	 	levs = c(base_lev, setdiff(levels(y), base_lev))	
+	 } else {
+	 	levs = model$levels
+		base_lev = NULL
+	 }
+
+	 y = factor(y, levels=levs)
+
     # Predicted class
     .nn = ncol(preds)
     preds$pred = factor(apply(preds[,1:.nn], 1, function(x) colnames(preds)[which.max(x)]),
@@ -289,15 +299,12 @@ boot_measures = function(model, df, outcome_var, problem_type, type="prob") {
 
     # --- Handle Binary vs Multiclass ---
     if (nlevels(y) == 2) {
-      base_lev = levels(y)[2]  
-
       # ROC
       rocr_pred = ROCR::prediction(preds[[base_lev]], preds$obs)
       model_roc = ROCR::performance(rocr_pred, "tpr", "fpr")
       roc_df = data.frame(x = model_roc@x.values[[1]], y = model_roc@y.values[[1]])
 
     } else {
-      base_lev = NULL
       
 		# Multiclass ROC (one-vs-rest)
       y_mat = model.matrix(~y-1)
@@ -473,16 +480,15 @@ get_post_metrics = function(model, outcome, df=NULL, task=NULL) {
 		  if (inherits(model, "caretEnsemble")) {
 			 preds = as.factor(colnames(preds)[max.col(preds, ties.method = "first")])
 		  }
-		  
-		  ## Confussion matrix
-		  cm = caret::confusionMatrix(preds, df[[outcome]])
+  		  y = df[[outcome]]
+		  cm = caret::confusionMatrix(preds, y)
 		  cm = as.data.frame(cm$table)
 		  colnames(cm) = c("Prediction", "Target", "N")
 		  cm_plot = cvms::plot_confusion_matrix(cm)
 	  } else if (isTRUE(task=="Regression")) {
 			preds = as.numeric(unlist(preds))
 			actuals = df[[outcome]]
-			cm_plot = (ggplot2::ggplot(data.frame(actual=df[[outcome]], pred=preds), aes(x=actual, y=pred))
+			cm_plot = (ggplot2::ggplot(data.frame(actual=y, pred=preds), aes(x=actual, y=pred))
 				+ ggplot2::geom_point(alpha=0.6) 
 				+ geom_smooth(method = lm, color="green", se = TRUE)
 				+ ggplot2::geom_abline(slope=1, intercept=0, color="red") 
@@ -598,9 +604,85 @@ post_metrics_model_filter = function(object, model_name) {
 }
 
 
+#' Save post model metrics objects
+#'
+#'
+#' @export
+
+save_post_metrics_plots = function(metric_list, output_dir = "outputs") {
+
+  cm_dir = paste0(output_dir, "/cm")
+  varimp_dir = paste0(output_dir, "/var_imp")
+
+  create_dir(cm_dir)
+  create_dir(varimp_dir)
+
+  for (metric_name in names(metric_list)) {
+    metric_entry = metric_list[[metric_name]]
+    cm_plot = metric_entry$cm_plot
+    if (!is.null(cm_plot)) {
+      cm_path = paste0(cm_dir, "/", metric_name, "_cm.png")
+      ggplot2::ggsave(cm_path, plot = cm_plot, width = 10, height = 10, units="cm", dpi=1000)
+    }
+
+    var_imp_plot = metric_entry$var_imp_plot
+    if (!is.null(var_imp_plot)) {
+      vip_path = paste0(varimp_dir, "/", metric_name, "_var_imp.png")
+      if (inherits(var_imp_plot, "trellis")) {
+        png(vip_path, width = 1200, height = 1200, units="px", pointsize = 12, res = 120)
+        print(var_imp_plot)
+        dev.off()
+      } else {
+        ggplot2::ggsave(vip_path, plot = var_imp_plot, width = 10, height = 10, units="cm", dpi=1000)
+      }
+    }
+  }
+}
+
+#' Save boot estimates plots
+#'
+#' @export
+
+save_boot_estimates = function(boot_list, output_dir="outputs") {
+  metrics_dir = paste0(output_dir, "/", "metrics_data")
+  create_dir(metrics_dir)
+  for (m in names(boot_list)) {
+    x = boot_list[[m]]
+    if (is.data.frame(x)) {
+      f = paste0(metrics_dir, "/", m, ".csv")
+      readr::write_csv(x, file=f)
+    }
+  }
+}
 
 
+#' Save any plot object 
+#'
+#'
+#' @export
+#'
 
+save_rautoml_plot = function(objects, name, output_dir="outputs") {
+	
+	create_dir(output_dir)
 
-
-
+	p_type = function(path, object) {
+		if (inherits(object, c("ggplot2", "ggplot"))) {
+      	ggplot2::ggsave(path, plot=object, width = 10, height = 10, units="cm", dpi=1000)
+		} else {
+        png(path, width = 1200, height = 1200, units="px", pointsize = 12, res = 120)
+        print(object)
+        dev.off()
+		}
+	}
+	if (length(objects)==1) {
+		plot_path = paste0(output_dir, "/", name, ".png")
+		p_type(path=plot_path, object=objects)	
+	} else {
+		for (m in names(objects)) {
+			object = objects[[m]]
+			plot_path = paste0(output_dir, "/", name, "-", m, ".png")
+			p_type(path=plot_path, object=object)
+		}
+	}
+}

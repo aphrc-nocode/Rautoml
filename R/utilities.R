@@ -9,7 +9,7 @@
 #' @export
 
 create_dir = function(name="new_folder") {
-	dir.create(name, showWarnings = FALSE)
+	dir.create(name, showWarnings = FALSE, recursive = TRUE)
 }
 
 
