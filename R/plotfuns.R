@@ -4,7 +4,7 @@
 #' @import ggplot2
 
 metric_theme = function(){
- theme_bw() +
+ theme_bw(base_size = 14) +
     theme(panel.spacing=grid::unit(0,"lines")
     	, plot.title = element_text(hjust = 0.5)
 		, legend.position = "bottom"
@@ -21,7 +21,7 @@ metric_theme = function(){
 		, panel.spacing.y = unit(0.3, "lines")
 		, panel.spacing.x = unit(1, "lines")
 		, strip.background = element_blank()
-		, strip.text.x = element_text(size = 11
+		, strip.text.x = element_text(size = 12
 			, colour = "black"
 			, face = "bold"
 		)
@@ -102,7 +102,7 @@ plot_varimp = function(x, ..., pos = 0.5, drop_zero = TRUE, top_n=NULL){
 	p1 <- (p0
 		+ scale_colour_viridis_d(option = "inferno")
 		+ labs(x = "", y = "|SHAP value|")
-		+ theme_minimal()
+		+ theme_minimal(base_size = 14)
 		+ coord_flip(clip = "off", expand = TRUE)
 	)
 	if (length(unique((x$Class)))>1) {
@@ -134,7 +134,7 @@ plot_vardep = function(x) {
   }
   p = (p
     + labs(x = "Observed values", y="SHAP value")
-    + theme_minimal()
+    + theme_minimal(base_size = 14)
   )
 	if (length(unique((x$Class)))>1) {
 	  p = (p
@@ -168,7 +168,7 @@ plot_varfreq = function(x) {
   		, expand=c(0,0)
   	)
   	+ labs(y="", x="Rank", fill="Frequency")
-  	+ theme_bw(base_size=12)
+  	+ theme_bw(base_size=14)
   	+ theme(
   		strip.background = element_blank()
   		, panel.border = element_rect(colour = "grey"
@@ -218,7 +218,7 @@ combine_shap_plots = function(vv, type) {
 
   plots <- Map(function(p, nm) {
     if (inherits(p, "gg")) {
-      p + theme_bw() + ggtitle(nm)
+      p + theme_bw(base_size = 14) + ggtitle(nm)
     } else NULL
   }, all_plots, names(all_plots))
 
@@ -368,7 +368,7 @@ ggunivariate = function(df, vartype, max_nlevels=30) {
 #'
 
 base_theme <- function() {
-  theme_minimal(base_size = 12) +
+  theme_minimal(base_size = 14) +
     theme(
       panel.grid.major = element_blank()
 		, panel.grid.minor = element_blank()
@@ -449,8 +449,8 @@ plot.Rautomlmetric = function(metric) {
 plot.Rautomlroc = function(est) {
 roc_plot = (ggplot(est, aes(x = x, y = y, group = model, colour = reorder(model, -estimate)))
 	+ geom_line()
-	+ scale_x_continuous(limits = c(0, 1))
-	+ scale_y_continuous(limits = c(0, 1))
+	+ scale_x_continuous(expand=c(0, 0), limits = c(0, 1))
+	+ scale_y_continuous(expand=c(0, 0), limits = c(0, 1))
 	+ ggthemes::scale_colour_colorblind()
    + geom_abline(intercept = 0, slope = 1, colour = "darkgrey", linetype = 2)
 	+ labs(x = "False positive rate"

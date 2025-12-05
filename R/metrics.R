@@ -609,7 +609,9 @@ post_metrics_model_filter = function(object, model_name) {
 #'
 #' @export
 
-save_post_metrics_plots = function(metric_list, output_dir = "outputs") {
+save_post_metrics_plots = function(metric_list, dataset_id, session_name, timestamp=Sys.time(), output_dir = "outputs") {
+  
+  output_dir = paste0(c(output_dir, dataset_id, session_name, "more_test_metrics"), collapse="/")
 
   cm_dir = paste0(output_dir, "/cm")
   varimp_dir = paste0(output_dir, "/var_imp")
@@ -621,19 +623,19 @@ save_post_metrics_plots = function(metric_list, output_dir = "outputs") {
     metric_entry = metric_list[[metric_name]]
     cm_plot = metric_entry$cm_plot
     if (!is.null(cm_plot)) {
-      cm_path = paste0(cm_dir, "/", metric_name, "_cm.png")
-      ggplot2::ggsave(cm_path, plot = cm_plot, width = 10, height = 10, units="cm", dpi=1000)
+      cm_path = paste0(cm_dir, "/", metric_name, "_cm", "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), ".png")
+      ggplot2::ggsave(cm_path, plot = cm_plot, width = 12, height = 12, units="in", dpi=300)
     }
 
     var_imp_plot = metric_entry$var_imp_plot
     if (!is.null(var_imp_plot)) {
-      vip_path = paste0(varimp_dir, "/", metric_name, "_var_imp.png")
+      vip_path = paste0(varimp_dir, "/", metric_name, "_var_imp", "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), ".png")
       if (inherits(var_imp_plot, "trellis")) {
         png(vip_path, width = 1200, height = 1200, units="px", pointsize = 12, res = 120)
         print(var_imp_plot)
         dev.off()
       } else {
-        ggplot2::ggsave(vip_path, plot = var_imp_plot, width = 10, height = 10, units="cm", dpi=1000)
+        ggplot2::ggsave(vip_path, plot = var_imp_plot, width = 12, height = 12, units="in", dpi=300)
       }
     }
   }
@@ -643,13 +645,13 @@ save_post_metrics_plots = function(metric_list, output_dir = "outputs") {
 #'
 #' @export
 
-save_boot_estimates = function(boot_list, output_dir="outputs") {
-  metrics_dir = paste0(output_dir, "/", "metrics_data")
-  create_dir(metrics_dir)
+save_boot_estimates = function(boot_list, dataset_id, session_name, timestamp=Sys.time(), output_dir="outputs", sub_dir="test_metrics") {
+  output_dir = paste0(c(output_dir, dataset_id, session_name, sub_dir), collapse="/")
+  create_dir(output_dir)
   for (m in names(boot_list)) {
     x = boot_list[[m]]
     if (is.data.frame(x)) {
-      f = paste0(metrics_dir, "/", m, ".csv")
+      f = paste0(output_dir, "/", m, "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), ".csv")
       readr::write_csv(x, file=f)
     }
   }
@@ -662,13 +664,14 @@ save_boot_estimates = function(boot_list, output_dir="outputs") {
 #' @export
 #'
 
-save_rautoml_plot = function(objects, name, output_dir="outputs") {
+save_rautoml_plot = function(objects, name, dataset_id, session_name, timestamp=Sys.time(), output_dir="outputs", metric_type=c( "training_metrics", "test_metrics")) {
 	
+	output_dir = paste0(c(output_dir, dataset_id, session_name, metric_type), collapse="/")
 	create_dir(output_dir)
 
 	p_type = function(path, object) {
 		if (inherits(object, c("ggplot2", "ggplot"))) {
-      	ggplot2::ggsave(path, plot=object, width = 10, height = 10, units="cm", dpi=1000)
+      	ggplot2::ggsave(path, plot=object, width = 12, height = 12, units="in", dpi=300)
 		} else {
         png(path, width = 1200, height = 1200, units="px", pointsize = 12, res = 120)
         print(object)
@@ -676,13 +679,28 @@ save_rautoml_plot = function(objects, name, output_dir="outputs") {
 		}
 	}
 	if (length(objects)==1) {
-		plot_path = paste0(output_dir, "/", name, ".png")
+		plot_path = paste0(output_dir, "/", name, "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), ".png")
 		p_type(path=plot_path, object=objects)	
 	} else {
 		for (m in names(objects)) {
 			object = objects[[m]]
-			plot_path = paste0(output_dir, "/", name, "-", m, ".png")
+			plot_path = paste0(output_dir, "/", name, "-", m, "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), ".png")
 			p_type(path=plot_path, object=object)
 		}
 	}
 }
+
+#' Save rautoml csv 
+#'
+#'
+#' @export
+#'
+
+
+save_rautoml_csv = function(object, name, dataset_id, session_name, timestamp=Sys.time(),  output_dir="outputs") {
+	output_dir = paste0(c(output_dir, dataset_id, session_name, "training_metrics"), collapse="/")
+	create_dir(output_dir)
+	file_path = paste0(output_dir, "/", name, "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), ".csv")
+	readr::write_csv(object, file=file_path)
+}
+
