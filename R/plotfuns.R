@@ -449,8 +449,8 @@ plot.Rautomlmetric = function(metric) {
 plot.Rautomlroc = function(est) {
 roc_plot = (ggplot(est, aes(x = x, y = y, group = model, colour = reorder(model, -estimate)))
 	+ geom_line()
-	+ scale_x_continuous(expand=c(0, 0), limits = c(0, 1))
-	+ scale_y_continuous(expand=c(0, 0), limits = c(0, 1))
+	+ scale_x_continuous(expand=expansion(mult=0.01), limits = c(0, 1))
+	+ scale_y_continuous(expand=expansion(mult=0.01), limits = c(0, 1))
 	+ ggthemes::scale_colour_colorblind()
    + geom_abline(intercept = 0, slope = 1, colour = "darkgrey", linetype = 2)
 	+ labs(x = "False positive rate"

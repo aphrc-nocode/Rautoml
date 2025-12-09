@@ -704,3 +704,49 @@ save_rautoml_csv = function(object, name, dataset_id, session_name, timestamp=Sy
 	readr::write_csv(object, file=file_path)
 }
 
+#' Extract hyperparameters
+#'
+#'
+#' @export 
+#'
+
+get_tuned_params.list = function(models) {
+  x = lapply(models, function(model) {
+    best_tuned = model$bestTune
+    all_tuned = model$results
+    nn = colnames(best_tuned)
+    x = list()
+    for (n in nn) {
+      x[[n]] = paste0(n, ": ",  best_tuned[[n]], " [", paste0(unique(all_tuned[[n]]), collapse = ","), "]")
+    }
+    return(x)
+  })
+  return(x)
+}
+
+#' Extract hyperparameters
+#'
+#'
+#' @export 
+#'
+
+get_tuned_params.caretEnsemble = function(models) {
+  models$models$ens_model = models$ens_model
+  params = get_tuned_params(models$models)
+  return(params)
+}
+
+#' Get control parameters
+#'
+#' @export
+#'
+
+get_ctl_params = function(models, items) {
+  if (length(models)==1) {
+    ctl = models[[1]]$control
+  } else {
+    ctl = models[[2]]$control
+  }
+  ctl = ctl[items]
+  return(ctl)
+}

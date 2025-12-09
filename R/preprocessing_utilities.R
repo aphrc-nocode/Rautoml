@@ -144,11 +144,11 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 			up_sample_type = match.arg(up_sample_type)
 			df_out = switch(
 			  up_sample_type,
-			  random = themis::step_upsample(df_out, dplyr::one_of(outcome_var), over_ratio = 0.5, skip=TRUE),
-			  smote  = themis::step_smote(df_out,   dplyr::one_of(outcome_var), over_ratio = 0.5, skip=TRUE),
-			  bsmote = themis::step_bsmote(df_out,  dplyr::one_of(outcome_var), over_ratio = 0.5, skip=TRUE),
-			  adasyn = themis::step_adasyn(df_out,  dplyr::one_of(outcome_var), over_ratio = 0.5, skip=TRUE),
-			  rose   = themis::step_rose(df_out,    dplyr::one_of(outcome_var), over_ratio = 0.5, skip=TRUE)
+			  random = themis::step_upsample(df_out, dplyr::one_of(outcome_var), over_ratio = 1, skip=TRUE),
+			  smote  = themis::step_smote(df_out,   dplyr::one_of(outcome_var), over_ratio = 1, skip=TRUE),
+			  bsmote = themis::step_bsmote(df_out,  dplyr::one_of(outcome_var), over_ratio = 1, skip=TRUE),
+			  adasyn = themis::step_adasyn(df_out,  dplyr::one_of(outcome_var), over_ratio = 1, skip=TRUE),
+			  rose   = themis::step_rose(df_out,    dplyr::one_of(outcome_var), over_ratio = 1, skip=TRUE)
 			)
 		}
 	}
@@ -183,10 +183,31 @@ preprocess = function(df, model_form, outcome_var, corr=0, impute=TRUE, impute_m
 	removed_vars = colnames(df)[!colnames(df) %in% colnames(df_out)]
 	if (length(removed_vars)>0) {
       preprocess_result$removed_vars = paste0("• ", length(removed_vars), " variabel(s) were removed after preprocessing: ", paste0(removed_vars, collapse=", "))
+	} 
+
+	up_sample_plots = NULL
+
+	if (isTRUE(!is.null(outcome_var)) & isTRUE(outcome_var!="")) {
+		if (isTRUE(!is.null(task)) & isTRUE(task=="Classification")) {
+			if (isTRUE(up_sample)) {
+				before_plot = (ggplot2::ggplot(df, aes(x=.data[[outcome_var]]))
+					+ geom_bar(fill = "darkgreen")
+					+ base_theme()
+					+ labs(x = outcome_var
+						, y = "Count"
+					)
+				)
+				after_plot = before_plot + df_out
+
+				up_sample_plots = (before_plot + ggtitle("Before: ")) / (after_plot + ggtitle("After: "))
+			}
+		} else {
+			up_sample_plots = NULL
+		}
 	}
 
 	preprocess_result = c(extract_recipe_text(prepped_recipe), paste0("• ", preprocess_result$predictors_for_analysis), preprocess_result$removed_vars)
-	return(list(train_dfdf=df_out, test_df=df_test, original_df=df, recipes=prepped_recipe, preprocess_steps=preprocess_result, outcome_nlevels=outcome_nlevels))
+	return(list(train_dfdf=df_out, test_df=df_test, original_df=df, recipes=prepped_recipe, preprocess_steps=preprocess_result, outcome_nlevels=outcome_nlevels, up_sample_plots = up_sample_plots))
 }
 
 

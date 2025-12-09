@@ -79,3 +79,12 @@ extract_more_metrics = function(object, model_name, metric_name)UseMethod("extra
 #' @export
 
 compute_shap = function(models, model_names=NULL, newdata, response, task, nsim = 50, max_n=1000, top_n_rank=5, total_n_rank=20)UseMethod("compute_shap")
+
+
+#' Extract hyperparameters
+#'
+#'
+#' @export 
+#'
+
+get_tuned_params = function(models)UseMethod("get_tuned_params")
