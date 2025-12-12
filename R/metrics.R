@@ -487,7 +487,7 @@ get_post_metrics = function(model, outcome, df=NULL, task=NULL) {
 		  cm_plot = cvms::plot_confusion_matrix(cm)
 	  } else if (isTRUE(task=="Regression")) {
 			preds = as.numeric(unlist(preds))
-			actuals = df[[outcome]]
+			y = df[[outcome]]
 			cm_plot = (ggplot2::ggplot(data.frame(actual=y, pred=preds), aes(x=actual, y=pred))
 				+ ggplot2::geom_point(alpha=0.6) 
 				+ geom_smooth(method = lm, color="green", se = TRUE)
