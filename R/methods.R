@@ -50,7 +50,7 @@ create_ensemble = function(all.models, excluded_class_id = 0L, tuneLength = 100,
 #'
 #' @export 
 
-boot_estimates_multiple = function(models, df, outcome_var, problem_type, nreps, model_name, type, report, summary_fun, save_model, model_id, model_folder, preprocesses)UseMethod("boot_estimates_multiple")
+boot_estimates_multiple = function(models, df, outcome_var, problem_type, nreps, model_name, type, report, summary_fun, save_model, model_id, model_folder, recipe_folder, preprocesses)UseMethod("boot_estimates_multiple")
 
 
 #' Generate confussion matrix and variable importance for caretEnsemble

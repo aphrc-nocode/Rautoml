@@ -17,6 +17,7 @@ boot_estimates_multiple(
   save_model,
   model_id,
   model_folder,
+  recipe_folder,
   preprocesses
 )
 }

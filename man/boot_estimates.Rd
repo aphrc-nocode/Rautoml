@@ -19,6 +19,7 @@ boot_estimates(
   save_model = FALSE,
   model_id = paste0(model_name, "-", Sys.time()),
   model_folder = "models",
+  recipe_folder = "recipes",
   preprocesses = NULL
 )
 }

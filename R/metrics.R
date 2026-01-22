@@ -343,7 +343,7 @@ boot_measures = function(model, df, outcome_var, problem_type, type="prob") {
 #' @export
 
 
-boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, type="prob", model_name=NULL, report = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity", "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate", "Balanced_Accuracy", "logLoss", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary, save_model=FALSE, model_id=paste0(model_name, "-", Sys.time()), model_folder="models", preprocesses=NULL) {
+boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, type="prob", model_name=NULL, report = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity", "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate", "Balanced_Accuracy", "logLoss", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary, save_model=FALSE, model_id=paste0(model_name, "-", Sys.time()), model_folder="models", recipe_folder="recipes", preprocesses=NULL) {
 	if (problem_type=="Classification") {
 		all = c("Accuracy", "AUC", "prAUC", "Kappa", "Sensitivity", "Specificity", "Precision", "Recall", "F1", "Pos_Pred_Value", "Neg_Pred_Value", "Detection_Rate", "Balanced_Accuracy", "logLoss")
 	} else if (problem_type=="Regression") {
@@ -386,7 +386,7 @@ boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, typ
 				, prototype = create_pred_prototype(df=dd, outcome_var=outcome_var)
 				, recipes = model_id
 			)
-			save_recipes(preprocesses$recipes, name=model_id, folder="recipes")
+			save_recipes(preprocesses$recipes, name=model_id, folder=recipe_folder)
 			save_model(model=model, name=model_id, folder=model_folder, metadata=metadata)
 		}
 		out_metric = out[out$metric==report,]
@@ -418,7 +418,7 @@ boot_estimates = function(model, df, outcome_var, problem_type, nreps = 100, typ
 #' @export 
 
 
-boot_estimates_multiple.caretList = function(models, df, outcome_var, problem_type, nreps = 100, model_name=NULL, type="prob", report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary, save_model=FALSE, model_id=paste0(model_name, "-", Sys.time()), model_folder="models", preprocesses=NULL) {
+boot_estimates_multiple.caretList = function(models, df, outcome_var, problem_type, nreps = 100, model_name=NULL, type="prob", report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary, save_model=FALSE, model_id=paste0(model_name, "-", Sys.time()), model_folder="models", recipe_folder="recipes", preprocesses=NULL) {
   est = lapply(models, function(x){
     est = boot_estimates(
       model=x
@@ -433,6 +433,7 @@ boot_estimates_multiple.caretList = function(models, df, outcome_var, problem_ty
 		, save_model=save_model
 		, model_id=model_id
 		, model_folder=model_folder
+		, recipe_folder=recipe_folder
 		, preprocesses=preprocesses
     )
     return(est)
@@ -453,12 +454,12 @@ boot_estimates_multiple.caretList = function(models, df, outcome_var, problem_ty
 #' @export 
 
 
-boot_estimates_multiple.caretEnsemble = function(models, df, outcome_var, problem_type, nreps = 100, model_name=NULL, type="prob", report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary, save_model=FALSE, model_id=paste0(model_name, "-", Sys.time()), model_folder="models", preprocesses=NULL) {
+boot_estimates_multiple.caretEnsemble = function(models, df, outcome_var, problem_type, nreps = 100, model_name=NULL, type="prob", report = c("Accuracy", "AUCROC", "AUCRecall", "Sens", "Spec", "Precision", "Recall", "F", "RMSE", "Rsquared", "MAE"), summary_fun=quantile_summary, save_model=FALSE, model_id=paste0(model_name, "-", Sys.time()), model_folder="models", recipe_folder="recipes", preprocesses=NULL) {
   ens_model = models
   base_models = as.list(models$models)
   base_models$ensemble = ens_model
   base_models$ensemble$method = "ensemble"
-  est = boot_estimates_multiple(base_models, df, outcome_var, problem_type, nreps, model_name, type, report, summary_fun, save_model, model_id, model_folder, preprocesses)
+  est = boot_estimates_multiple(base_models, df, outcome_var, problem_type, nreps, model_name, type, report, summary_fun, save_model, model_id, model_folder, recipe_folder, preprocesses)
   class(est) = c("Rautomlmetric2", class(est))
   return(est)
 }
