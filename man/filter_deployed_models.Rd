@@ -6,6 +6,9 @@
 \usage{
 filter_deployed_models(df, model_ids)
 }
+\arguments{
+\item{df}{}
+}
 \description{
 Filter deployed models
 }

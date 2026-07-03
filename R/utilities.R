@@ -120,6 +120,8 @@ check_logs = function(path, pattern="*.log$") {
 #' @return A character string specifying the class of the data.
 #'
 #' @export
+#'
+
 
 get_data_class = function(path) {
 	class(path) = get_file_ext(path)
@@ -133,7 +135,7 @@ get_data_class = function(path) {
 #'
 #' Uploads csv data
 #'
-#' @param path
+#' @param path data path.
 #'
 #' @return a dataframe.
 #'
@@ -152,7 +154,7 @@ upload_data.csv = function(path) {
 #'
 #' Uploads excel data
 #'
-#' @param path
+#' @param path data path.
 #'
 #' @return a dataframe.
 #'
@@ -167,12 +169,11 @@ upload_data.xlsx = function(path) {
 	return(df)
 }
 
-
 #' Upload Excel data
 #'
 #' Uploads excel data
 #'
-#' @param path
+#' @param path data path.
 #'
 #' @return a dataframe.
 #'
@@ -192,7 +193,7 @@ upload_data.xls = function(path) {
 #'
 #' Uploads Stata data
 #'
-#' @param path
+#' @param path data path.
 #'
 #' @return a dataframe.
 #'
@@ -211,7 +212,7 @@ upload_data.dta = function(path) {
 #'
 #' Uploads rda data. The rda file should be a dataframe.
 #'
-#' @param path
+#' @param path data path.
 #'
 #' @return a dataframe.
 #'
@@ -228,7 +229,7 @@ upload_data.rda = function(path) {
 #'
 #' Uploads rds data. The rda file should be a dataframe.
 #'
-#' @param path
+#' @param path data path.
 #'
 #' @return a dataframe.
 #'
@@ -246,7 +247,7 @@ upload_data.rds = function(path) {
 #'
 #' Uploads .sav or .por data.
 #'
-#' @param path
+#' @param path data path.
 #'
 #' @return a dataframe.
 #'
@@ -262,13 +263,11 @@ upload_data.spss = function(path) {
 }
 
 
-#' Write csv data
-#'
 #' Writes csv data
 #'
-#' @param df data frame
+#' @param path data path.
+#' @param df data frame.
 #'
-#' @param path
 #'
 #' @return NULL.
 #'
@@ -283,13 +282,11 @@ write_data.csv = function(path, df) {
 }
 
 
-#' Write xlsx data
-#'
 #' Writes xlsx data
 #'
-#' @param df data frame
+#' @param path data path.
 #'
-#' @param path
+#' @param df data fram.
 #'
 #' @return NULL.
 #'
@@ -308,9 +305,9 @@ write_data.xlsx = function(path, df) {
 #'
 #' Writes Stata data
 #'
-#' @param df dataframe
+#' @param path data path.
 #'
-#' @param path
+#' @param df dataframe.
 #'
 #' @return NULL.
 #'
@@ -328,8 +325,8 @@ write_data.dta = function(path, df) {
 #'
 #' Writes rda data. The rda file should be a dataframe.
 #'
+#' @param path data path.
 #' @param df data frame.
-#' @param path
 #'
 #' @return NULL.
 #'
@@ -345,8 +342,8 @@ write_data.rda = function(path, df) {
 #'
 #' Writes rds dataframe.
 #'
+#' @param path data path.
 #' @param df data frame.
-#' @param path
 #'
 #' @return NULL.
 #'
@@ -363,8 +360,8 @@ write_data.rds = function(path, df) {
 #'
 #' Writes .sav or .por data.
 #'
+#' @param path data path.
 #' @param df data frame.
-#' @param path
 #'
 #' @return NULL.
 #'
@@ -1108,6 +1105,17 @@ set_api = function(name, api) {
 	gemini.R::setAPI(api_key)
 }
 
+#' Reset API
+#'
+#' Reset API and set a new one.
+#'
+#' @param name API name
+#'
+#' @export
+
+unset_api = function(name) {
+	Sys.unsetenv(name)
+}
 
 #' Extract logs
 #'
@@ -1231,6 +1239,8 @@ check_value_exists = function(df, var, what) {
 #'
 #' @details Filter a metrics df based on session_name and metric
 #'
+#' @param df
+#'
 #' @export
 #'
 
@@ -1245,6 +1255,8 @@ filter_session_metric = function(df, metric_name, session_name_, model_name) {
 #'
 #' @details Filter a metrics df based on current data
 #'
+#' @param df
+#'
 #' @export
 #'
 
@@ -1256,6 +1268,9 @@ filter_current_data = function(df, dataset_id_) {
 }
 
 #' Filter deployed models
+#'
+#'
+#' @param df
 #'
 #' @export 
 #'
@@ -1271,6 +1286,8 @@ filter_deployed_models = function(df, model_ids) {
 #' Start trained model API
 #'
 #' @details Creates an API to access trained model
+#' 
+#' @param folder
 #'
 #' @export
 #'
@@ -1327,6 +1344,8 @@ check_api_connection = function(url, timeout=5) {
 
 #' Check if columns in two datasets match
 #'
+#' @param df1 first data frame.
+#' @param df2 second data frame.
 #' @export
 #'
 

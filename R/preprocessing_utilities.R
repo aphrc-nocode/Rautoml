@@ -253,7 +253,8 @@ train_test_split = function(data, type=c("single", "time", "group", "tseries"), 
 			dd = rsample::initial_time_split(data=data, prop=prop, lag=lag, ...)
 		}
 		, "group" = {
-			dd = rsample::group_initial_split(data=data, group=group, prop=prop, ...=..., strata=strata, pool=pool)
+			data = add_group_key(data, group_vars=group, key_name="..group_id")
+			dd = rsample::group_initial_split(data=data, group="..group_id", prop=prop, ...=..., strata=strata, pool=pool)
 		}
 		, "tseries" = {
 			dd = NULL # FIXME:: TODO
@@ -261,8 +262,52 @@ train_test_split = function(data, type=c("single", "time", "group", "tseries"), 
 	)
 	train_df = rsample::training(dd)
 	test_df = rsample::testing(dd)
-	out = list(split=dd, train_df=train_df, test_df=test_df)
+	index = NULL
+
+	if (type=="group") {
+		index = train_df[["..group_id"]]
+		train_df = (train_df
+			|> dplyr::select(-all_of(c("..group_id", group)))
+		)
+		test_df = (test_df
+			|> dplyr::select(-all_of(c("..group_id", group)))
+		)
+	}
+	out = list(split=dd, train_df=train_df, test_df=test_df, index = index)
 	return(out)
 }
 
 
+#' Help for multiple variable grouping 
+#'
+#' @param data dataset.
+#' @param group_vars variables used for grouping (repreated measurements)
+#' @param key_name column name for the created variable
+#'
+
+add_group_key <- function(data, group_vars, key_name = "..group_id") {
+  stopifnot(all(group_vars %in% names(data)))
+  key = (data 
+  		|> dplyr::select(all_of(group_vars)) 
+		|> purrr::pmap_chr(~ paste(..., sep = "__"))
+	)
+  data[[key_name]] = key
+  return(data)
+}
+
+#' Create index for grouped k-fold cross-validation
+#'
+#' @param x vector of groups in the data
+#' @param k k-fold
+#'
+#' @export
+#'
+
+create_grouped_index = function(x, k=5) {
+	n = length(unique(x))
+	if (k > n) {
+		k = n - 1
+	}
+	index = caret::groupKFold(x, k = k)
+	return(index)
+}

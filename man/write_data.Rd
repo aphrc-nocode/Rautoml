@@ -25,7 +25,7 @@ write_data(path, df)
 \method{write_data}{spss}(path, df)
 }
 \arguments{
-\item{path}{}
+\item{path}{data path.}
 
 \item{df}{data frame.}
 }
@@ -46,10 +46,6 @@ NULL.
 }
 \description{
 This function uses the file extension to determine data type and save data appropriately into the local disk.
-
-Writes csv data
-
-Writes xlsx data
 
 Writes Stata data
 

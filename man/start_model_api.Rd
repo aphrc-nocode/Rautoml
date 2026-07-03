@@ -6,6 +6,9 @@
 \usage{
 start_model_api(folder, model_name, host = "127.0.0.1", port = NULL)
 }
+\arguments{
+\item{folder}{}
+}
 \description{
 Start trained model API
 }

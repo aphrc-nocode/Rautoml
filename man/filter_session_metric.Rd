@@ -6,6 +6,9 @@
 \usage{
 filter_session_metric(df, metric_name, session_name_, model_name)
 }
+\arguments{
+\item{df}{}
+}
 \description{
 Filter session and metric
 }
