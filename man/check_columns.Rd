@@ -6,6 +6,11 @@
 \usage{
 check_columns(df1, df2)
 }
+\arguments{
+\item{df1}{first data frame.}
+
+\item{df2}{second data frame.}
+}
 \description{
 Check if columns in two datasets match
 }

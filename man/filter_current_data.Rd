@@ -6,6 +6,9 @@
 \usage{
 filter_current_data(df, dataset_id_)
 }
+\arguments{
+\item{df}{}
+}
 \description{
 Filter current dataset
 }

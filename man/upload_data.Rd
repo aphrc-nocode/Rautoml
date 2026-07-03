@@ -28,7 +28,7 @@ upload_data(path)
 \method{upload_data}{spss}(path)
 }
 \arguments{
-\item{path}{}
+\item{path}{data path.}
 }
 \value{
 a dataframe.
