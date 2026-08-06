@@ -81,6 +81,33 @@ extract_more_metrics = function(object, model_name, metric_name)UseMethod("extra
 compute_shap = function(models, model_names=NULL, newdata, response, task, nsim = 50, max_n=1000, top_n_rank=5, total_n_rank=20)UseMethod("compute_shap")
 
 
+#' Compute calibration data for caretList or caretEnsemble models
+#'
+#' @details For classification models, computes binned calibration
+#'   (reliability) data -- mean predicted probability vs. observed event rate
+#'   per bin, with Wilson score confidence intervals. For regression models,
+#'   computes the same binned structure using raw predictions against the
+#'   observed outcome, with a Student-t interval per bin instead (the same
+#'   formula as `student_t_summary()`). Either way the result also carries
+#'   the raw predictions used for a smoothed calibration curve. Problem type
+#'   is read from `model$modelType` unless overridden with `problem_type`.
+#'   For `caretEnsemble` models the stacked ensemble is included alongside
+#'   its base learners, following the same convention as `compute_shap()`.
+#'
+#' @param models a `caretList` or `caretEnsemble` object
+#' @param df test/validation data.frame containing predictors and the outcome
+#' @param outcome_var name of the outcome column in `df`
+#' @param n_bins number of calibration bins (default 10)
+#' @param strategy `"quantile"` (equal-count bins, default) or `"uniform"` (equal-width bins)
+#' @param type passed to `predict.train(..., type=)` for classification models
+#' @param problem_type `"Classification"` or `"Regression"`; if `NULL`
+#'   (default), auto-detected per model from `model$modelType`
+#'
+#' @export
+
+compute_calibration = function(models, df, outcome_var, n_bins=10, strategy=c("quantile", "uniform"), type="prob", problem_type=NULL)UseMethod("compute_calibration")
+
+
 #' Extract hyperparameters
 #'
 #'

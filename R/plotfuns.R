@@ -1,4 +1,3 @@
-
 #' GGplot Theme for metrics
 #' 
 #' @import ggplot2
@@ -464,6 +463,103 @@ roc_plot = (ggplot(est, aes(x = x, y = y, group = model, colour = reorder(model,
 
 
 
+#' Plot calibration (reliability) curves
+#'
+#' @details Plots binned observed-vs-predicted calibration points (sized by
+#'   bin count) with confidence intervals, a diagonal line of perfect
+#'   calibration, and, by default, a smoothed calibration curve through the
+#'   raw (unbinned) predictions, computed by `calibration_smooth()` (loess,
+#'   falling back to a linear fit, with a warning naming any model it can't
+#'   fit at all rather than just leaving its curve off silently). The smooth
+#'   curve is mapped to both colour and linetype, so two models with
+#'   identical or near-identical curves -- for instance a `caretEnsemble`
+#'   stack whose greedy weighting assigned one base learner all the weight,
+#'   making the ensemble numerically identical to it -- stay visually
+#'   distinguishable rather than one line fully hiding the other.
+#'
+#'   For classification, axes are fixed to the `[0, 1]` probability scale.
+#'   For regression, axes share a common range computed from the data, so
+#'   the diagonal reference line means the same thing on both axes.
+#'
+#' @param x an object of class `Rautomlcalibration`, from `compute_calibration()`
+#' @param show_smooth logical, add a smoothed calibration curve (default `TRUE`)
+#' @param show_ci logical, show confidence intervals on the binned points (default `TRUE`)
+#'
+#' @import ggplot2
+#'
+#' @export
+#'
+
+plot.Rautomlcalibration = function(x, show_smooth = TRUE, show_ci = TRUE, ...) {
+  bins = x$bins
+  raw = x$raw
+
+  if (is.null(bins) || nrow(bins) == 0) {
+    stop("Nothing to plot: compute_calibration() returned no calibration data (see the warning it raised).")
+  }
+
+  is_regression = identical(x$problem_type, "Regression")
+
+  if (is_regression) {
+    lims = range(c(bins$x, bins$y, raw$x, raw$y, bins$lower, bins$upper), na.rm = TRUE)
+    lims = lims + c(-1, 1) * diff(lims) * 0.03
+    x_lab = "Mean predicted value"
+    y_lab = "Mean observed value"
+  } else {
+    lims = c(0, 1)
+    x_lab = "Mean predicted probability"
+    y_lab = "Observed proportion"
+  }
+
+  p = (ggplot(bins, aes(x = x, y = y, colour = model))
+    + geom_abline(intercept = 0, slope = 1, colour = "darkgrey", linetype = 2)
+  )
+
+  if (isTRUE(show_smooth)) {
+    smooth_df = calibration_smooth(raw)
+    if (!is.null(smooth_df)) {
+      p = (p
+        ## linetype (in addition to colour) so two models with identical or
+        ## near-identical curves -- e.g. a greedy caretEnsemble stack that
+        ## assigned one base learner 100% weight -- don't have one line fully
+        ## hide the other
+        + geom_line(data = smooth_df, aes(x = x, y = y, colour = model, linetype = model))
+      )
+    }
+  }
+
+  if (isTRUE(show_ci)) {
+    p = (p
+      + geom_linerange(aes(ymin = lower, ymax = upper), alpha = 0.6)
+    )
+  }
+
+  p = (p
+    + geom_point(aes(size = n))
+    + scale_x_continuous(expand = expansion(mult = 0.01), limits = lims)
+    + scale_y_continuous(expand = expansion(mult = 0.01), limits = lims)
+    + ggthemes::scale_colour_colorblind()
+    + labs(x = x_lab
+      , y = y_lab
+      , colour = "Model"
+      , linetype = "Model"
+      , size = "Bin size"
+    )
+    + metric_theme()
+    + theme(legend.position = "right")
+  )
+
+  if ("Class" %in% colnames(bins)) {
+    p = (p
+      + facet_wrap(~Class)
+    )
+  }
+
+  return(p)
+}
+
+
+
 #' Plot metrics from model test
 #'
 #' @param est
@@ -523,3 +619,74 @@ plot.Rautomlmetric2 = function(est) {
 }
 
 
+
+#' Plot Brier score and its calibration/discrimination decomposition
+#'
+#' @details Three side-by-side panels, one row per model in each: the Brier
+#'   score itself, its reliability component (calibration error), and its
+#'   resolution component (discrimination ability). Models are ordered by
+#'   Brier score (best at top) consistently across all three panels, so
+#'   scanning across a row shows whether a model's score comes from good
+#'   calibration, good discrimination, or both.
+#'
+#'   Uncertainty (the fourth decomposition term) isn't plotted per model,
+#'   since it depends only on the outcome's base rate and comes out the same
+#'   for every model on the same test set -- it's reported once in the
+#'   subtitle instead of as a row of identical points.
+#'
+#'   This is a horizontal layout (models on the y-axis) with no per-model
+#'   colour legend, so it scales to many models by growing taller rather
+#'   than wider or busier; axis text shrinks a little once there are more
+#'   than about 8 models, and again past 15, to keep rows readable.
+#'
+#' @param x an object of class `Rautomlbrier`, from `compute_brier()`
+#'
+#' @import ggplot2
+#'
+#' @export
+#'
+
+plot.Rautomlbrier = function(x, ...) {
+  scores = x$scores
+  if (is.null(scores) || nrow(scores) == 0) {
+    stop("Nothing to plot: compute_brier() returned no scores.")
+  }
+
+  n_models = length(unique(scores$model))
+  model_order = scores$model[order(scores$brier)]
+
+  long = (scores
+    |> dplyr::select(model, brier, reliability, resolution)
+    |> tidyr::pivot_longer(cols = c(brier, reliability, resolution), names_to = "metric", values_to = "value")
+    |> dplyr::mutate(
+      model = factor(model, levels = rev(model_order))
+      , metric = factor(metric
+        , levels = c("brier", "reliability", "resolution")
+        , labels = c("Brier score\n(lower is better)", "Reliability\n(lower is better)", "Resolution\n(higher is better)")
+      )
+    )
+  )
+
+  axis_text_size = if (n_models > 15) 9 else if (n_models > 8) 10.5 else 12
+  point_size = if (n_models > 15) 1.8 else 2.5
+
+  uncertainty_val = signif(mean(scores$uncertainty, na.rm = TRUE), 4)
+
+  p = (ggplot(long, aes(x = value, y = model))
+    + geom_point(size = point_size, colour = "#2c5f7c")
+    + facet_wrap(~metric, scales = "free_x", nrow = 1)
+    + labs(x = NULL
+      , y = NULL
+      , title = "Brier score and its calibration / discrimination breakdown"
+      , subtitle = paste0("Uncertainty (base-rate variance, same for every model): ", uncertainty_val)
+    )
+    + metric_theme()
+    + theme(
+      axis.text.y = element_text(size = axis_text_size)
+      , axis.text.x = element_text(size = axis_text_size)
+      , plot.subtitle = element_text(hjust = 0.5, size = 11, colour = "grey30")
+    )
+  )
+
+  return(p)
+}
