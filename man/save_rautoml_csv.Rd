@@ -10,7 +10,8 @@ save_rautoml_csv(
   dataset_id,
   session_name,
   timestamp = Sys.time(),
-  output_dir = "outputs"
+  output_dir = "outputs",
+  metric_type = "training_metrics"
 )
 }
 \description{

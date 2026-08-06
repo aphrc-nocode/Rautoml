@@ -698,11 +698,22 @@ save_rautoml_plot = function(objects, name, dataset_id, session_name, timestamp=
 #'
 
 
-save_rautoml_csv = function(object, name, dataset_id, session_name, timestamp=Sys.time(),  output_dir="outputs") {
-	output_dir = paste0(c(output_dir, dataset_id, session_name, "training_metrics"), collapse="/")
+save_rautoml_csv = function(object, name, dataset_id, session_name, timestamp=Sys.time(),  output_dir="outputs", metric_type="training_metrics") {
+	output_dir = paste0(c(output_dir, dataset_id, session_name, metric_type), collapse="/")
 	create_dir(output_dir)
-	file_path = paste0(output_dir, "/", name, "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), ".csv")
-	readr::write_csv(object, file=file_path)
+
+	if (!is.data.frame(object) & length(object)>1) {
+		for (m in names(object)) {
+			f = object[[m]]
+			if (is.data.frame(f)) {
+				file_path = paste0(output_dir, "/", name, "_", m, "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), ".csv")
+				readr::write_csv(f, file=file_path)
+			}
+		}
+	} else {
+		file_path = paste0(output_dir, "/", name, "-", format_date_time(timestamp, "%d%m%Y%H%M%S"), ".csv")
+		readr::write_csv(object, file=file_path)
+	}
 }
 
 #' Extract hyperparameters
