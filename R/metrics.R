@@ -87,7 +87,11 @@ get_endpoint_data = function(url, endpoint=c("ping", "metadata", "prototype")) {
 preprocess_new_data = function(recipes, new_data, update_skip=FALSE) {
 	if (update_skip) {
 		for (i in 1:length(recipes$steps)) {
-			recipes$steps[[i]]$skip = FALSE
+			if (any(grepl("smote_|upsample_|bsmote_|adasyn_|rose_", recipes$steps[[i]]$id, ignore.case = TRUE))) {
+				recipes$steps[[i]]$skip = TRUE
+			} else {
+				recipes$steps[[i]]$skip = FALSE
+			}
 		}
 	}
   df = (recipes
